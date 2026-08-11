@@ -1,0 +1,75 @@
+name: Documentation site bug
+description: Report a problem with the monban documentation website itself
+title: "[Site]: "
+labels:
+  - bug
+
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Navigation
+        - Search
+        - Layout
+        - Mobile layout
+        - Styling
+        - Code blocks
+        - Tables
+        - Links
+        - Deployment
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: Link to the page where the problem occurs.
+      placeholder: https://monban.miyu.pw/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      description: Describe the visible or functional problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe how the page or site should behave instead.
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Firefox 151 / Chrome 140 / Safari ...
+
+  - type: input
+    id: device
+    attributes:
+      label: Device / operating system
+      placeholder: Linux desktop / Windows 11 / Android / iOS ...
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or additional context
+      description: Drag screenshots here if they help show the problem.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true

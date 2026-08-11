@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: monban plugin bug
+    url: https://github.com/hanamuramiyu/monban/issues/new/choose
+    about: Report plugin behavior, access-control, platform, or compatibility issues in the main monban repository.
+
+  - name: Security vulnerability
+    url: https://github.com/hanamuramiyu/monban/security/policy
+    about: Do not disclose security vulnerabilities in a public documentation issue.

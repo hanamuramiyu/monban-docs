@@ -1,0 +1,56 @@
+name: Documentation issue
+description: Report missing, incorrect, unclear, or outdated monban documentation
+title: "[Docs]: "
+labels:
+  - documentation
+
+body:
+  - type: dropdown
+    id: problem
+    attributes:
+      label: Type of issue
+      options:
+        - Incorrect information
+        - Outdated information
+        - Missing documentation
+        - Unclear explanation
+        - Broken example
+        - Broken link
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: Link to the affected documentation page, if applicable.
+      placeholder: https://monban.miyu.pw/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: details
+    attributes:
+      label: What is wrong?
+      description: Describe the problem as precisely as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should be changed?
+      description: Describe the correction or information you expected to find.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked that this issue is about the documentation, not a monban plugin bug.
+          required: true
+        - label: I searched existing issues for the same problem.
+          required: true
