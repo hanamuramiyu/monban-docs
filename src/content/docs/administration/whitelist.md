@@ -11,19 +11,30 @@ description: Manage the global monban whitelist on every supported platform.
 monban.command.whitelist
 ```
 
+## Enable and disable
+
+```text
+/monban whitelist enable
+/monban whitelist disable
+```
+
+These commands change `whitelist.enabled` at runtime on Bukkit/Spigot, Paper/Folia, and Velocity. The updated configuration is saved before the runtime policy changes. If saving fails, the current runtime policy remains unchanged.
+
 ## Add
 
 ```text
 /monban whitelist add offline <name>
+/monban whitelist add online <name>
 /monban whitelist add online <name> <uuid>
 ```
 
-ONLINE entries require the UUID that should match an independently authenticated ONLINE connection. OFFLINE entries use the player name as the durable identity key.
+The short ONLINE form resolves the official Mojang profile by name. The UUID form bypasses profile lookup and uses the supplied verified UUID. OFFLINE entries use the player name as the durable identity key.
 
 ## Remove
 
 ```text
 /monban whitelist remove offline <name>
+/monban whitelist remove online <name>
 /monban whitelist remove online <name> <uuid>
 ```
 

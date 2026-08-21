@@ -6,6 +6,7 @@ description: monban command permissions by supported platform.
 | Permission | Platforms | Purpose |
 | --- | --- | --- |
 | `monban.command.whitelist` | Bukkit / Spigot / Paper / Folia / Velocity | global whitelist |
+| `monban.command.lookup` | Velocity | player identity and whitelist lookup |
 | `monban.command.access` | Velocity | scoped grants |
 | `monban.command.status` | Velocity | status |
 

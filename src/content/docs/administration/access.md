@@ -15,14 +15,19 @@ monban.command.access
 
 ```text
 /monban access grant network offline <name>
+/monban access grant network online <name>
 /monban access grant network online <name> <uuid>
 
 /monban access grant group <group-id> offline <name>
+/monban access grant group <group-id> online <name>
 /monban access grant group <group-id> online <name> <uuid>
 
 /monban access grant server <server-name> offline <name>
+/monban access grant server <server-name> online <name>
 /monban access grant server <server-name> online <name> <uuid>
 ```
+
+The short ONLINE form resolves the official Mojang profile by name. The UUID form bypasses profile lookup and uses the supplied verified UUID.
 
 ## Revoke
 
@@ -30,12 +35,15 @@ monban.command.access
 
 ```text
 /monban access revoke network offline <name>
+/monban access revoke network online <name>
 /monban access revoke network online <name> <uuid>
 
 /monban access revoke group <group-id> offline <name>
+/monban access revoke group <group-id> online <name>
 /monban access revoke group <group-id> online <name> <uuid>
 
 /monban access revoke server <server-name> offline <name>
+/monban access revoke server <server-name> online <name>
 /monban access revoke server <server-name> online <name> <uuid>
 ```
 

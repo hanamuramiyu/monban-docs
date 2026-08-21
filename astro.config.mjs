@@ -63,6 +63,7 @@ export default defineConfig({
           label: 'Administration',
           items: [
             { label: 'Whitelist', slug: 'administration/whitelist' },
+            { label: 'Lookup', slug: 'administration/lookup' },
             { label: 'Access', slug: 'administration/access' },
             { label: 'Status', slug: 'administration/status' },
             { label: 'Permissions', slug: 'administration/permissions' },
