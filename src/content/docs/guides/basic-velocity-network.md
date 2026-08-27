@@ -59,3 +59,5 @@ or, for an intended OFFLINE identity:
 ```
 
 With the global whitelist enabled and backend default `OPEN`, the player must first pass the `NETWORK` whitelist and then can connect to either open backend without an additional scoped grant.
+
+To add permissions for plugins on a backend, continue with [Centralized Backend Permissions](/guides/centralized-permissions/).

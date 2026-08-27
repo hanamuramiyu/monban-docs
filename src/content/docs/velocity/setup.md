@@ -3,7 +3,7 @@ title: Velocity Setup
 description: Configure monban with Velocity as the network access authority.
 ---
 
-Use the Velocity build when the proxy should own network admission and scoped backend access.
+Use the Velocity build when the proxy should own network admission, scoped backend access, player groups, and centralized permissions.
 
 <div class="download-actions compact">
   <a class="download-button primary" href="https://modrinth.com/plugin/monban">Download on Modrinth</a>
@@ -53,7 +53,28 @@ Velocity evaluates two distinct concerns:
 
 A player can therefore enter the network and still be denied access to a restricted backend.
 
-## 4. Velocity data files
+## 4. Configure centralized backend state
+
+The proxy can distribute ACL, player groups, group assignments, and direct permissions to Bukkit/Paper backends over a signed plugin-message channel. Enable it in the proxy `config.yml`:
+
+```yaml
+backend-permissions:
+  enabled: true
+```
+
+Velocity creates `sync.yml` with a random secret automatically. Copy that file to every participating backend. On each backend, enable the feature and set its registered-server name:
+
+```yaml
+backend-permissions:
+  enabled: true
+  server-name: survival
+```
+
+Install the matching monban Bukkit or Paper build on every backend that must apply local permissions. A backend without monban cannot receive or apply these nodes. A backend with centralized mode does not register local whitelist administration; the proxy is the only authority.
+
+See [Backend Permissions](/velocity/backend-permissions/) and [Centralized Backend Permissions](/guides/centralized-permissions/).
+
+## 5. Velocity data files
 
 monban uses these files for the current Velocity access-control surface:
 
@@ -64,6 +85,10 @@ monban uses these files for the current Velocity access-control surface:
 | `server-groups.yml` | Velocity backend grouping |
 | `access-grants.yml` | Persistent `SERVER_GROUP` and `SERVER` grants |
 | `backend-access.yml` | Backend access modes and overrides |
+| `player-groups.yml` | Player group definitions, ACL, and group permissions |
+| `group-assignments.yml` | Player-to-group assignments |
+| `player-permissions.yml` | Direct player permissions |
+| `sync.yml` | Shared secret for backend state synchronization |
 
 `server-groups.yml` and `backend-access.yml` receive empty/open defaults when missing. Whitelist and scoped grant storage is created when persistent mutations require it.
 

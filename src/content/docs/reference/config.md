@@ -5,6 +5,25 @@ description: Reference for monban deployment, whitelist, identity, and Velocity 
 
 `config.yml` is strict. Unknown fields, invalid enum values, wrong structure/types, duplicate YAML keys, YAML aliases, multiple YAML documents, and unsupported config versions are rejected.
 
+## Backend permissions
+
+On Velocity, enable state synchronization once:
+
+```yaml
+backend-permissions:
+  enabled: true
+```
+
+On each Paper/Folia backend that should apply centralized permissions, use the same section and set the exact Velocity server name:
+
+```yaml
+backend-permissions:
+  enabled: true
+  server-name: survival
+```
+
+Velocity creates `sync.yml` and a random secret automatically when this feature is enabled. Copy that generated `sync.yml` to the participating backends. A backend with the feature disabled remains standalone and does not register backend permission handling.
+
 ## Standalone shape
 
 ```yaml

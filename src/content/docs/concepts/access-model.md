@@ -15,6 +15,8 @@ monban uses positive access grants. The scope tells monban **what the grant open
 
 `NETWORK` is the global whitelist state. On Velocity, `SERVER_GROUP` and `SERVER` are additional backend-access scopes; they do not replace the network whitelist.
 
+Player groups can contain these same access scopes. Assigning a player group therefore combines group ACL with any direct grants already assigned to that player.
+
 ## Network Admission
 
 When `whitelist.enabled: true`, the player must have a matching `NETWORK` grant before entering the standalone server or Velocity network.
@@ -39,3 +41,5 @@ Velocity can independently mark a backend as `OPEN` or `GRANT_REQUIRED` through 
 The current access model contains positive grants. It does not contain persistent `DENY` grants, precedence rules for deny effects, or temporary grant expiration.
 
 For practical configuration, continue with [Scoped Access](/velocity/scoped-access/) and [Backend Policies](/velocity/backend-policies/).
+
+For group-based access and permissions, see [Player Groups & Permissions](/concepts/player-groups/).

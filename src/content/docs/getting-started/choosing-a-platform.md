@@ -11,6 +11,7 @@ Choose the platform based on **where access authority belongs**.
 | --- | :---: | :---: | :---: |
 | Standalone whitelist | ✓ | ✓ | <span class="table-muted">—</span> |
 | Network whitelist | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
+| Player permissions | ✓ | ✓ | ✓ |
 | Server groups | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
 | Per-server grants | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
 | Backend policies | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
@@ -42,5 +43,7 @@ Use `monban-velocity-<version>.jar` when Velocity is the network access authorit
 - per-server or per-group grants;
 - backend access policies;
 - hybrid ONLINE/OFFLINE authentication-flow selection.
+
+For backend permissions in a Velocity network, install monban on the proxy and on each Bukkit/Paper backend where a plugin must receive a permission node. The proxy remains the central authority; backend instances apply the synchronized state locally.
 
 Continue with [Velocity Setup](/velocity/setup/).

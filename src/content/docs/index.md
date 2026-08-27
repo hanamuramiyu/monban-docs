@@ -15,6 +15,8 @@ description: Minecraft access control for standalone servers and Velocity networ
 
 Standalone installations use a global monban whitelist. Velocity can use the same global whitelist and additionally restrict individual backends or groups of backends.
 
+Velocity also provides built-in player groups and ordinary permission nodes. Groups can combine network access, backend access, and permissions; configured Bukkit/Paper backends receive the shared state and apply their local permission nodes without requiring LuckPerms.
+
 ## Player identity
 
 monban distinguishes two identity types:
@@ -37,6 +39,12 @@ Backend policies decide whether a backend is `OPEN` or requires one of those sco
 
 [Read Access Model →](/concepts/access-model/)
 
+## Player groups and permissions
+
+Player `GROUP` definitions are separate from Velocity `SERVER_GROUP` definitions. A player can receive one or more groups, direct ACL grants, and direct permissions. Use `/monban lookup <player>` to inspect the effective result and its origins.
+
+[Read Player Groups & Permissions →](/concepts/player-groups/)
+
 ## Hybrid authentication
 
 Velocity can optionally select an `ONLINE` or `OFFLINE` authentication flow for each connection on a supported hybrid deployment. The selection does not authenticate a player by itself: Velocity remains responsible for the selected authentication flow, and monban resolves the final identity from the resulting authentication facts.
@@ -54,4 +62,5 @@ When monban cannot safely initialize or verify security-sensitive access state, 
   <a class="doc-link-card" href="/getting-started/choosing-a-platform/"><strong>Not sure which build?</strong><span>Choosing a Platform →</span></a>
   <a class="doc-link-card" href="/standalone/setup/"><strong>Standalone server</strong><span>Standalone Setup →</span></a>
   <a class="doc-link-card" href="/velocity/setup/"><strong>Velocity network</strong><span>Velocity Setup →</span></a>
+  <a class="doc-link-card" href="/guides/centralized-permissions/"><strong>Backend permissions</strong><span>Centralized Setup →</span></a>
 </div>

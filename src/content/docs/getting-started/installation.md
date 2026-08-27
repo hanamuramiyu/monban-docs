@@ -47,3 +47,5 @@ A standalone monban installation requires the native Minecraft whitelist to be d
 :::
 
 Continue with [Standalone Setup](/standalone/setup/) or [Velocity Setup](/velocity/setup/).
+
+For a network where monban should apply permissions to backend plugins, install the Velocity build on the proxy and the matching Bukkit or Paper build on each backend that needs those permissions. Continue with [Centralized Backend Permissions](/guides/centralized-permissions/).
