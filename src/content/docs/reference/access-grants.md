@@ -1,15 +1,9 @@
 ---
 title: access-grants.yml
-description: Persistent SERVER_GROUP and SERVER positive grant storage.
+description: Persistent Velocity SERVER_GROUP and SERVER grants.
 ---
 
-`access-grants.yml` stores Velocity scoped grants that are **not** part of the global `NETWORK` whitelist.
-
-:::caution[NETWORK does not belong here]
-`NETWORK` entries are stored in `whitelist.yml`. A `NETWORK` scope inside `access-grants.yml` is invalid.
-:::
-
-## Schema
+`access-grants.yml` stores scoped grants only. `NETWORK` entries belong in `whitelist.yml`.
 
 ```yaml
 schema-version: 1
@@ -19,31 +13,24 @@ grants:
       id: testing
     identity:
       type: OFFLINE
-      name: hanamuramiyu2
+      name: Builder
   - scope:
       type: SERVER
-      id: dev
+      id: survival
     identity:
-      type: ONLINE
-      name: hanamuramiyu
-      verified-uuid: 00000000-0000-0000-0000-000000000000
+      type: FLOODGATE
+      name: .BedrockName
+      xuid: '2535421234567890'
 ```
 
-## Scope fields
+| Field | Values |
+| --- | --- |
+| `scope.type` | `SERVER_GROUP`, `SERVER` |
+| `scope.id` | Server-group ID or canonical Velocity backend name |
+| `identity` | `ONLINE`, `OFFLINE`, or `FLOODGATE` object |
 
-| Field | Accepted values | Required |
-| --- | --- | :---: |
-| `scope.type` | `SERVER_GROUP`, `SERVER` | ✓ |
-| `scope.id` | Group ID or canonical backend name | ✓ |
+The file rejects `NETWORK` scopes, malformed identities, unknown fields, aliases, duplicate equivalent grants, and unsupported schema versions.
 
-Identity objects use the same ONLINE/OFFLINE semantics as `whitelist.yml`.
+Persistent scopes are validated against the resolved Velocity topology at startup. A missing file means no scoped grants.
 
-## Behavior
-
-- Grants are positive-only.
-- Malformed YAML, unknown fields, invalid identities, unsupported schema versions, duplicate YAML keys/aliases, and duplicate equivalent grants are rejected.
-- Persistent `SERVER_GROUP` scopes must reference an existing resolved group.
-- Persistent `SERVER` scopes must use an existing backend's canonical Velocity name.
-- A missing file means an empty scoped repository. It does not need to be created until the first persistent mutation.
-
-Prefer `/monban access` for normal administration.
+Use [Scoped Access](/velocity/scoped-access/) for normal administration.

@@ -1,13 +1,13 @@
 ---
 title: Hybrid Authentication
-description: Configure Velocity to select ONLINE or OFFLINE authentication flow per connection.
+description: Let Velocity choose an ONLINE or OFFLINE authentication flow per connection.
 ---
 
-**Hybrid authentication chooses which Velocity authentication flow a connection uses. It does not itself authenticate the player.**
+Hybrid authentication selects **which Velocity authentication flow** a connection should attempt. It does not authenticate the player and does not create a monban identity by itself.
 
-Velocity remains the authentication authority for the selected flow. monban only uses pre-login access state to select the flow, then resolves the actual ONLINE/OFFLINE identity from the authentication facts available later in the login pipeline.
+After Velocity completes the selected flow, monban resolves the resulting identity using the normal `ONLINE` or `OFFLINE` rules. Floodgate is a separate identity path.
 
-## Supported configuration
+## Required configuration
 
 Hybrid v1 requires all of the following:
 
@@ -34,47 +34,46 @@ identity:
   hybrid:
     enabled: true
     dual-entry-preference: ONLINE
+  floodgate:
+    enabled: false
+    require-provider: false
 ```
 
-The following combinations are rejected rather than silently downgraded:
+The following combinations are rejected:
 
 ```text
-STANDALONE + any identity.hybrid block
+STANDALONE + identity.hybrid
 hybrid enabled + identity.mode=OFFLINE
-hybrid enabled + Velocity global online-mode=true
+hybrid enabled + Velocity online-mode=true
 ```
 
-## Tested Paper topology
+## Tested backend topology
 
-The current hybrid flow has been runtime-validated on this Paper topology:
+The current hybrid flow is validated with Paper and Velocity Modern Forwarding:
 
 <div class="flow-diagram">
   <div class="flow-node"><strong>Velocity</strong><span>online-mode=false</span></div>
   <div class="flow-arrow">↓</div>
-  <div class="flow-node"><strong>Modern Forwarding</strong><span>trusted proxy → backend forwarding</span></div>
+  <div class="flow-node"><strong>Modern Forwarding</strong><span>trusted proxy to backend</span></div>
   <div class="flow-arrow">↓</div>
-  <div class="flow-node"><strong>Paper backend</strong><span>online-mode=false<br />proxies.velocity.enabled=true<br />proxies.velocity.online-mode=false</span></div>
+  <div class="flow-node"><strong>Paper backend</strong><span>online-mode=false<br />Velocity forwarding enabled</span></div>
 </div>
 
-:::note[Scope of runtime validation]
-This topology has been validated with Paper. Do not infer Folia-specific hybrid runtime compatibility from that Paper validation alone.
-:::
+Do not infer Folia-specific hybrid compatibility from Paper validation alone.
 
-## How flow selection works
+## Flow selection
 
-### ONLINE-only matching grant
+### ONLINE-only access
 
-When the available routing information matches an ONLINE-only grant, monban asks Velocity to use the ONLINE authentication flow.
+If pre-login routing state matches an `ONLINE` entry, monban selects Velocity's `ONLINE` flow. A client that cannot complete Mojang authentication cannot become that identity.
 
-A cracked client cannot satisfy that ONLINE-only path: Mojang authentication fails before an ordinary ONLINE monban identity could be established.
+### OFFLINE-only access
 
-### OFFLINE-only matching grant
+If the connection matches an `OFFLINE` entry, monban selects the `OFFLINE` flow. A licensed client can intentionally use this path and remains an `OFFLINE` monban identity for that connection.
 
-When the connection matches an OFFLINE-only entry, monban selects the OFFLINE flow. A licensed client can intentionally travel through this path and remains an **OFFLINE monban identity** for that connection.
+### Both forms match
 
-### Both ONLINE and OFFLINE entries
-
-If both identity forms are available for the same presented name/routing context, `dual-entry-preference` selects the preferred flow:
+`dual-entry-preference` chooses which flow to prefer:
 
 ```yaml
 dual-entry-preference: ONLINE
@@ -86,14 +85,10 @@ or:
 dual-entry-preference: OFFLINE
 ```
 
-## Routing hints are not identity proof
+## Routing hints are not proof
 
-A UUID visible during pre-login may be useful as a routing hint when it matches existing ONLINE access state. That does not make it verified identity proof.
+A UUID visible before authentication can be useful for selecting a flow. It does not prove account ownership. The `ONLINE` identity is established only after Velocity supplies the authentication facts that monban requires.
 
-The actual ONLINE identity is established only after Velocity authentication provides the facts required by the normal identity resolver.
+An ONLINE selection means “attempt the ONLINE flow,” not “this player is already authenticated.”
 
-:::caution[Do not treat selection as authentication]
-An ONLINE selection means “attempt the ONLINE authentication flow.” It does not mean “this player is already authenticated.”
-:::
-
-For an end-to-end configuration, see [Hybrid Premium + Offline Network](/guides/hybrid-network/).
+For an end-to-end setup, see [Hybrid Network](/guides/hybrid-network/).

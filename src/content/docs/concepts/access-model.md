@@ -1,45 +1,72 @@
 ---
 title: Access Model
-description: Understand NETWORK, SERVER_GROUP, and SERVER access scopes.
+description: Understand network admission, scoped grants, and the three access scopes.
 ---
 
-monban uses positive access grants. The scope tells monban **what the grant opens**.
+monban uses **positive grants**. A grant says where an identity may go; the absence of a matching grant never becomes a permanent deny rule that overrides another positive grant.
 
-## Scopes
+## The three scopes
 
-| Scope | Meaning | Where it is used |
+| Scope | Opens | Stored as |
 | --- | --- | --- |
-| `NETWORK` | Global whitelist entry | Standalone and Velocity |
-| `SERVER_GROUP` | Access to a named group of Velocity backends | Velocity |
-| `SERVER` | Access to one specific Velocity backend | Velocity |
+| `NETWORK` | Entry to the standalone server or Velocity network | `whitelist.yml` |
+| `SERVER_GROUP` | Entry to any backend in a named Velocity server group | `access-grants.yml` or a player group |
+| `SERVER` | Entry to one Velocity backend | `access-grants.yml` or a player group |
 
-`NETWORK` is the global whitelist state. On Velocity, `SERVER_GROUP` and `SERVER` are additional backend-access scopes; they do not replace the network whitelist.
+`NETWORK` is the global whitelist. `SERVER_GROUP` and `SERVER` are narrower grants used by Velocity backend admission and permissions.
 
-Player groups can contain these same access scopes. Assigning a player group therefore combines group ACL with any direct grants already assigned to that player.
+## Network admission
 
-## Network Admission
+`whitelist.enabled` controls one question:
 
-When `whitelist.enabled: true`, the player must have a matching `NETWORK` grant before entering the standalone server or Velocity network.
+```text
+Does this identity have a matching NETWORK grant?
+```
 
-When `whitelist.enabled: false`, that global requirement is skipped.
+When it is `true`, every player entering a standalone server or Velocity must pass that check. When it is `false`, the check is skipped. You can change it at runtime with `/monban whitelist enable` or `disable`.
 
-## Backend Admission on Velocity
+## Backend admission
 
-Velocity can independently mark a backend as `OPEN` or `GRANT_REQUIRED` through `backend-access.yml`.
+Velocity checks backend access separately. Each backend's effective mode comes from `backend-access.yml`:
+
+| Mode | Additional requirement |
+| --- | --- |
+| `OPEN` | None |
+| `GRANT_REQUIRED` | A matching `SERVER` or `SERVER_GROUP` grant |
+
+The resulting matrix is:
 
 | Global whitelist | Backend `OPEN` | Backend `GRANT_REQUIRED` |
 | --- | --- | --- |
-| disabled | allowed | scoped grant still required |
-| enabled | `NETWORK` grant required first | `NETWORK` + scoped grant requirements |
+| disabled | allowed | scoped grant required |
+| enabled | `NETWORK` required | `NETWORK` plus scoped grant required |
 
-:::caution[Whitelist disabled does not mean all access control disabled]
-`whitelist.enabled: false` disables the `NETWORK` requirement. It does not disable Velocity Backend Admission or a `GRANT_REQUIRED` policy.
-:::
+This is why disabling the global whitelist does not make restricted backends public.
 
-## Positive grants only
+## Direct and grouped grants
 
-The current access model contains positive grants. It does not contain persistent `DENY` grants, precedence rules for deny effects, or temporary grant expiration.
+A player can receive access in two ways:
 
-For practical configuration, continue with [Scoped Access](/velocity/scoped-access/) and [Backend Policies](/velocity/backend-policies/).
+1. directly, through `/monban access ...` or `/monban whitelist ...`;
+2. through an assigned player group containing access entries.
 
-For group-based access and permissions, see [Player Groups & Permissions](/concepts/player-groups/).
+The effective result is the union of all positive grants. A duplicate grant is displayed once with all known origins.
+
+Player groups are not the same thing as Velocity server groups:
+
+| Name | Contains | Example |
+| --- | --- | --- |
+| Player group | Identities, access entries, permissions | `moderator` |
+| Server group | Velocity backend names | `testing` |
+
+A player group can contain a grant for a server group, but the two objects are independent.
+
+## What is not supported
+
+The current access model has no persistent deny grants, grant precedence between conflicting access entries, temporary expiry, wildcard nodes, or player-group inheritance.
+
+## Related pages
+
+- [Backend Policies](/velocity/backend-policies/) for `OPEN` and `GRANT_REQUIRED` precedence.
+- [Scoped Access](/velocity/scoped-access/) for grants to backend groups and servers.
+- [Player Groups & Permissions](/concepts/player-groups/) for direct and inherited entries.

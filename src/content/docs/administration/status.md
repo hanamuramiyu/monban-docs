@@ -1,31 +1,24 @@
 ---
 title: Status
-description: Read the current Velocity monban access-control summary.
+description: Read a concise runtime summary from the Velocity access authority.
 ---
 
-`/monban status` is available on **Velocity only**.
-
-## Permission
-
-```text
-monban.command.status
-```
-
-## Command
+`/monban status` is available on Velocity and requires `monban.command.status`.
 
 ```text
 /monban status
 ```
 
-The status view reports loaded runtime state useful for understanding the current access-control installation:
+The summary reports:
 
 - deployment mode;
-- global whitelist enabled/disabled state;
+- global whitelist state;
 - identity mode;
-- hybrid enabled/disabled state and active preference when enabled;
+- hybrid state and dual-entry preference;
 - Velocity global `online-mode`;
-- total access-grant count and counts for `NETWORK`, `SERVER_GROUP`, and `SERVER`;
-- server-group count;
-- backend policy default and explicit policy counts.
+- grant counts for `NETWORK`, `SERVER_GROUP`, and `SERVER`;
+- server-group and backend-policy counts.
 
-The command is intentionally an operator summary. It does **not** expose forwarding secrets, player UUID listings, active session lists, CPU/RAM/uptime metrics, or a synthetic health-check verdict.
+It is a configuration and topology view. It does not list player UUIDs, active sessions, memory or CPU usage, or forwarding secrets, and it does not claim to perform a synthetic health check.
+
+For a player-specific view, use [Lookup](/administration/lookup/). For startup failures, inspect the proxy log and [Troubleshooting](/help/troubleshooting/).

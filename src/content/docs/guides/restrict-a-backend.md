@@ -1,19 +1,18 @@
 ---
 title: Restrict a Backend
-description: Keep a public lobby while requiring scoped access for testing backends.
+description: Keep a public lobby while requiring a grant for a testing group.
 ---
 
-Target topology:
+Target:
 
 ```text
-Velocity
-├── lobby        → OPEN
-└── testing
-    ├── test-lobby
-    └── test-survival   → GRANT_REQUIRED
+lobby        OPEN
+testing
+├── test-lobby      GRANT_REQUIRED
+└── test-survival   GRANT_REQUIRED
 ```
 
-## 1. Create the testing group
+## 1. Define the server group
 
 `server-groups.yml`:
 
@@ -26,7 +25,7 @@ groups:
       - test-survival
 ```
 
-## 2. Restrict the group
+## 2. Require a grant
 
 `backend-access.yml`:
 
@@ -40,20 +39,25 @@ policies:
     mode: GRANT_REQUIRED
 ```
 
-The lobby inherits `OPEN`. Both testing servers inherit `GRANT_REQUIRED` from their group.
+The lobby inherits `OPEN`. Both testing backends inherit `GRANT_REQUIRED`.
 
-## 3. Grant testing access
+## 3. Grant a player
 
 ```text
 /monban access grant group testing online hanamuramiyu <verified-uuid>
 ```
 
-or:
+For a Bedrock player:
 
 ```text
-/monban access grant group testing offline hanamuramiyu2
+/monban access grant group testing floodgate .BedrockName
 ```
 
-A player who passes Network Admission can enter `lobby`. Without a matching `SERVER_GROUP(testing)` grant or a direct grant for the chosen testing backend, that same player is denied the restricted target.
+## 4. Verify
 
-See [Backend Policies](/velocity/backend-policies/) for precedence and [Access Administration](/administration/access/) for full command syntax.
+- An ungranted player can enter the lobby.
+- The same player cannot switch to a testing backend.
+- The granted player can enter both testing backends.
+- `/monban access list group testing` shows the grant.
+
+If the player cannot enter the proxy at all, check `NETWORK` admission first. If the proxy accepts the login but the backend switch fails, check this policy and grant.

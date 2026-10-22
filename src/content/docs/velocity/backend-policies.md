@@ -1,11 +1,13 @@
 ---
 title: Backend Policies
-description: Decide which Velocity backends are open and which require scoped grants.
+description: Choose which Velocity backends are open and which require a scoped grant.
 ---
 
-`backend-access.yml` controls Backend Admission independently from the global network whitelist.
+Backend admission is independent of the global whitelist. It decides whether entering a particular backend needs a `SERVER` or `SERVER_GROUP` grant.
 
-## Example
+## Configure policies
+
+`plugins/monban/backend-access.yml`:
 
 ```yaml
 schema-version: 1
@@ -21,37 +23,40 @@ policies:
     mode: OPEN
 ```
 
+A missing file is created with `default: OPEN` and no overrides.
+
 ## Modes
 
-### `OPEN`
+| Mode | Behavior |
+| --- | --- |
+| `OPEN` | The backend adds no scoped-access requirement |
+| `GRANT_REQUIRED` | A matching `SERVER` or `SERVER_GROUP` grant is required |
 
-The backend policy itself requires no scoped grant.
+For a backend in a group, `GRANT_REQUIRED` accepts either a direct `SERVER` grant for that backend or a `SERVER_GROUP` grant for its group.
 
-### `GRANT_REQUIRED`
+## Precedence
 
-The connection must have a matching scoped grant.
-
-For a backend that belongs to a group, `GRANT_REQUIRED` accepts either:
-
-- a direct `SERVER` grant for that backend; or
-- a `SERVER_GROUP` grant for its group.
-
-## Policy priority
-
-The effective mode is selected in this order:
+The effective mode is resolved in this order:
 
 ```text
-SERVER
-  ↓
-SERVER_GROUP
-  ↓
-default
+SERVER override
+→ SERVER_GROUP override
+→ default
 ```
 
-A direct server policy therefore overrides its group policy, and a group policy overrides the file default.
+A direct `SERVER` policy can therefore open one member of an otherwise restricted group.
 
-:::caution[Global whitelist and Backend Admission are separate]
-Passing the `NETWORK` whitelist does not grant access to every `GRANT_REQUIRED` backend. Likewise, `whitelist.enabled: false` does not turn restricted backends into `OPEN` backends.
-:::
+## Validation
 
-For exact schema rules, see [`backend-access.yml` Reference](/reference/backend-access/).
+At startup, every policy group must exist and every server policy must name a real Velocity backend. The file rejects `NETWORK` scopes, unsupported modes, duplicate policies, unknown fields, duplicate YAML keys, and YAML aliases.
+
+## Interaction with the whitelist
+
+| Global whitelist | `OPEN` backend | `GRANT_REQUIRED` backend |
+| --- | --- | --- |
+| disabled | allowed | scoped grant required |
+| enabled | `NETWORK` required | `NETWORK` and scoped grant required |
+
+Disabling the global whitelist does not turn a restricted backend into a public one.
+
+See the [backend-access.yml reference](/reference/backend-access/) and [Restrict a Backend](/guides/restrict-a-backend/).

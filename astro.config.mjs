@@ -29,52 +29,63 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Getting Started',
+          label: 'Start Here',
           items: [
             { label: 'Introduction', link: '/' },
+            { label: 'How monban Works', slug: 'concepts/how-it-works' },
             { label: 'Installation', slug: 'getting-started/installation' },
             { label: 'Choosing a Platform', slug: 'getting-started/choosing-a-platform' },
+            { label: 'Upgrading to 3.3', slug: 'getting-started/upgrading-to-3-3' },
           ],
         },
         {
-          label: 'Concepts',
+          label: 'Set Up',
           items: [
-            { label: 'Player Identity', slug: 'concepts/player-identity' },
-            { label: 'Access Model', slug: 'concepts/access-model' },
-            { label: 'Player Groups & Permissions', slug: 'concepts/player-groups' },
-          ],
-        },
-        {
-          label: 'Standalone',
-          items: [
-            { label: 'Setup', slug: 'standalone/setup' },
-          ],
-        },
-        {
-          label: 'Velocity',
-          items: [
-            { label: 'Setup', slug: 'velocity/setup' },
-            { label: 'Server Groups', slug: 'velocity/server-groups' },
-            { label: 'Scoped Access', slug: 'velocity/scoped-access' },
-            { label: 'Backend Policies', slug: 'velocity/backend-policies' },
-            { label: 'Backend Permissions', slug: 'velocity/backend-permissions' },
-            { label: 'Hybrid Authentication', slug: 'velocity/hybrid-authentication' },
+            { label: 'Standalone', slug: 'standalone/setup' },
+            { label: 'Velocity Network', slug: 'velocity/setup' },
+            { label: 'Geyser & Floodgate', slug: 'velocity/geyser-floodgate' },
           ],
         },
         {
           label: 'Administration',
           items: [
+            { label: 'Command Overview', slug: 'administration/commands' },
             { label: 'Whitelist', slug: 'administration/whitelist' },
+            { label: 'Scoped Access', slug: 'velocity/scoped-access' },
+            { label: 'Player Groups & Permissions', slug: 'concepts/player-groups' },
             { label: 'Lookup', slug: 'administration/lookup' },
-            { label: 'Access', slug: 'administration/access' },
             { label: 'Status', slug: 'administration/status' },
-            { label: 'Permissions', slug: 'administration/permissions' },
           ],
+        },
+        {
+          label: 'Understand',
+          items: [
+            { label: 'Player Identity', slug: 'concepts/player-identity' },
+            { label: 'Access Model', slug: 'concepts/access-model' },
+            { label: 'Security Model', slug: 'concepts/security-model' },
+            { label: 'Backend Synchronization', slug: 'concepts/backend-sync' },
+            { label: 'Server Groups', slug: 'velocity/server-groups' },
+            { label: 'Backend Policies', slug: 'velocity/backend-policies' },
+            { label: 'Hybrid Authentication', slug: 'velocity/hybrid-authentication' },
+          ],
+        },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'Standalone Online Server', slug: 'guides/standalone-online' },
+            { label: 'Standalone Offline Server', slug: 'guides/standalone-offline' },
+            { label: 'Basic Velocity Network', slug: 'guides/basic-velocity-network' },
+            { label: 'Restrict a Backend', slug: 'guides/restrict-a-backend' },
+            { label: 'Centralized Permissions', slug: 'guides/centralized-permissions' },
+            { label: 'Hybrid Network', slug: 'guides/hybrid-network' },
+          ],
+          collapsed: true,
         },
         {
           label: 'Reference',
           items: [
             { label: 'config.yml', slug: 'reference/config' },
+            { label: 'Commands & Permissions', slug: 'reference/commands' },
             { label: 'whitelist.yml', slug: 'reference/whitelist' },
             { label: 'server-groups.yml', slug: 'reference/server-groups' },
             { label: 'access-grants.yml', slug: 'reference/access-grants' },
@@ -84,18 +95,6 @@ export default defineConfig({
             { label: 'player-permissions.yml', slug: 'reference/player-permissions' },
             { label: 'backend.yml', slug: 'reference/backend' },
             { label: 'sync.yml', slug: 'reference/sync' },
-          ],
-          collapsed: true,
-        },
-        {
-          label: 'Guides',
-          items: [
-            { label: 'Standalone Online Server', slug: 'guides/standalone-online' },
-            { label: 'Standalone Offline Server', slug: 'guides/standalone-offline' },
-            { label: 'Basic Velocity Network', slug: 'guides/basic-velocity-network' },
-            { label: 'Restrict a Backend', slug: 'guides/restrict-a-backend' },
-            { label: 'Centralized Backend Permissions', slug: 'guides/centralized-permissions' },
-            { label: 'Hybrid Premium + Offline Network', slug: 'guides/hybrid-network' },
           ],
           collapsed: true,
         },

@@ -1,16 +1,18 @@
 ---
-title: backend.yml (legacy)
-description: Legacy backend configuration reference.
+title: backend.yml (Legacy)
+description: Legacy backend configuration retained for older installations.
 ---
 
-New installations must configure backend permissions in `config.yml`. This file is retained only as a reference for older installations and is no longer read by current builds.
+Current builds do not read `backend.yml`. Configure backend synchronization in `config.yml` instead.
+
+Old shape:
 
 ```yaml
 schema-version: 1
 server-name: survival
 ```
 
-Use this current configuration instead:
+Current shape:
 
 ```yaml
 backend-permissions:
@@ -18,4 +20,4 @@ backend-permissions:
   server-name: survival
 ```
 
-The backend also needs [`sync.yml`](/reference/sync/) with the same secret as Velocity. `backend-permissions.enabled: false` leaves the instance standalone.
+The backend also needs the shared [`sync.yml`](/reference/sync/). See [Backend Synchronization](/concepts/backend-sync/).

@@ -1,30 +1,13 @@
 ---
 title: config.yml
-description: Reference for monban deployment, whitelist, identity, and Velocity hybrid settings.
+description: Complete configuration reference for monban 3.3.0.
 ---
 
-`config.yml` is strict. Unknown fields, invalid enum values, wrong structure/types, duplicate YAML keys, YAML aliases, multiple YAML documents, and unsupported config versions are rejected.
+`config.yml` controls deployment, the whitelist toggle, identity resolution, and backend synchronization.
 
-## Backend permissions
+The parser is strict. It rejects unknown fields, wrong types, invalid enum values, duplicate YAML keys, aliases, multiple YAML documents, and unsupported schema versions.
 
-On Velocity, enable state synchronization once:
-
-```yaml
-backend-permissions:
-  enabled: true
-```
-
-On each Paper/Folia backend that should apply centralized permissions, use the same section and set the exact Velocity server name:
-
-```yaml
-backend-permissions:
-  enabled: true
-  server-name: survival
-```
-
-Velocity creates `sync.yml` and a random secret automatically when this feature is enabled. Copy that generated `sync.yml` to the participating backends. A backend with the feature disabled remains standalone and does not register backend permission handling.
-
-## Standalone shape
+## Generated standalone configuration
 
 ```yaml
 config-version: 1
@@ -37,20 +20,23 @@ whitelist:
 
 identity:
   mode: AUTO
+
+backend-permissions:
+  enabled: false
+  server-name: ''
 ```
 
-| Field | Type | Accepted values | Meaning |
-| --- | --- | --- | --- |
-| `config-version` | integer | `1` | Configuration schema version |
-| `deployment.mode` | enum | `STANDALONE` | Local server owns admission |
-| `whitelist.enabled` | boolean | `true`, `false` | Require a `NETWORK` grant |
-| `identity.mode` | enum | `AUTO`, `OFFLINE` | Identity resolution policy |
+| Field | Values | Meaning |
+| --- | --- | --- |
+| `deployment.mode` | `STANDALONE` | This server owns local admission |
+| `whitelist.enabled` | `true`, `false` | Require a `NETWORK` entry |
+| `identity.mode` | `AUTO`, `OFFLINE` | Java identity policy |
+| `backend-permissions.enabled` | `true`, `false` | Receive state from Velocity |
+| `backend-permissions.server-name` | Non-blank when enabled; may be empty when disabled | Exact Velocity server name |
 
-:::caution[No hybrid block on standalone]
-`identity.hybrid` is forbidden in `STANDALONE` configuration even when `identity.hybrid.enabled` would be `false`. Remove the entire block.
-:::
+`identity.hybrid` and `identity.floodgate` are rejected in a standalone file. A Paper or Bukkit server can still be a backend by enabling `backend-permissions`.
 
-## Velocity shape
+## Generated Velocity configuration
 
 ```yaml
 config-version: 1
@@ -66,19 +52,39 @@ identity:
   hybrid:
     enabled: false
     dual-entry-preference: ONLINE
+  floodgate:
+    enabled: false
+    require-provider: false
+
+backend-permissions:
+  enabled: false
 ```
 
-| Field | Type | Accepted values | Meaning |
-| --- | --- | --- | --- |
-| `config-version` | integer | `1` | Configuration schema version |
-| `deployment.mode` | enum | `VELOCITY` | Velocity owns network admission |
-| `whitelist.enabled` | boolean | `true`, `false` | Require a global `NETWORK` grant |
-| `identity.mode` | enum | `AUTO`, `OFFLINE` | Identity resolution policy |
-| `identity.hybrid.enabled` | boolean | `true`, `false` | Enable per-connection auth-flow selection |
-| `identity.hybrid.dual-entry-preference` | enum | `ONLINE`, `OFFLINE` | Flow preference when both entry types match |
+| Field | Values | Meaning |
+| --- | --- | --- |
+| `deployment.mode` | `VELOCITY` | Velocity owns network admission |
+| `whitelist.enabled` | `true`, `false` | Require a global `NETWORK` entry |
+| `identity.mode` | `AUTO`, `OFFLINE` | Java identity policy |
+| `identity.hybrid.enabled` | `true`, `false` | Enable auth-flow selection |
+| `identity.hybrid.dual-entry-preference` | `ONLINE`, `OFFLINE` | Preference when both Java forms match |
+| `identity.floodgate.enabled` | `true`, `false` | Resolve Bedrock identities through Floodgate |
+| `identity.floodgate.require-provider` | `true`, `false` | Fail startup when the provider is absent |
+| `backend-permissions.enabled` | `true`, `false` | Publish synchronized state |
 
-The `identity.hybrid` mapping is required in a Velocity config even when hybrid is disabled.
+The complete `identity.hybrid` mapping is required on Velocity even when disabled. New and upgraded configurations also contain an explicit `identity.floodgate` mapping. If you add the Floodgate mapping manually, set `enabled` explicitly: an empty `floodgate` mapping is interpreted as enabled.
 
-When hybrid is enabled, `identity.mode` must be `AUTO`, and the current Velocity global `online-mode` must be `false`.
+## Validation rules
 
-See [Hybrid Authentication](/velocity/hybrid-authentication/) for the supported topology.
+- `identity.hybrid` is allowed only with `deployment.mode: VELOCITY`.
+- Enabling hybrid requires `identity.mode: AUTO`.
+- Enabling hybrid requires Velocity's global `online-mode=false`.
+- `identity.floodgate` is allowed only on Velocity.
+- `require-provider` has no effect while Floodgate integration is disabled. With `enabled: true`, `require-provider: true` makes a missing Floodgate API stop startup; without it, monban starts with Java resolution active.
+- With `enabled: true` and `require-provider: false`, an undiscoverable Floodgate API leaves Java resolution active; runtime provider failures still deny the connection.
+- A backend's `server-name` must match the exact Velocity registered-server name.
+
+## Migration behavior
+
+When a Velocity config omits `identity.floodgate`, monban writes the explicit defaults. When `backend-permissions` is absent, it adds that section. Review the rewritten file after upgrading and back it up first.
+
+For related files, see [Backend Synchronization](/concepts/backend-sync/) and the [sync.yml reference](/reference/sync/).

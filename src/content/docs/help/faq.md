@@ -1,44 +1,64 @@
 ---
 title: FAQ
-description: Short answers to common monban access-control questions.
+description: Direct answers to common monban questions.
 ---
 
 ## Does monban replace the vanilla whitelist?
 
-On standalone Bukkit/Spigot and Paper/Folia, yes. The native whitelist must be disabled with `white-list=false`, leaving monban as the whitelist authority.
+On a standalone Bukkit, Spigot, Paper, or Folia server, yes. Set `white-list=false` so monban is the only whitelist authority.
 
-## Can I use `/whitelist` while monban is active?
+## Can I still use `/whitelist`?
 
-No. After successful standalone startup, direct `/whitelist`, `/minecraft:whitelist`, and `/bukkit:whitelist` administration is blocked. Use `/monban whitelist`.
+After successful startup, monban blocks native whitelist administration and directs operators to `/monban whitelist`. On Velocity it registers a guard for the same command labels when they are free.
 
-## Does monban support cracked/offline players?
+## Does monban support cracked or offline players?
 
-Yes. OFFLINE identity is explicit and name-based.
+Yes. Use an `OFFLINE` identity. Matching is based on the normalized username and does not prove account ownership.
 
 ## Does a UUID make a player ONLINE?
 
-No. Authentication provenance determines whether a UUID is trusted as a verified ONLINE identity.
+No. The platform's authentication provenance determines whether the UUID is trusted as `ONLINE`. A technical UUID on an offline connection remains metadata.
 
-## Can one player have both ONLINE and OFFLINE entries?
+## What is a FLOODGATE identity?
 
-Yes. They are distinct identities. On Velocity hybrid deployments, `dual-entry-preference` decides which authentication flow is preferred when both forms match routing state.
+It is an authenticated Bedrock identity resolved through Floodgate on Velocity. Its key is the normalized Floodgate Java username; for unlinked accounts that is normally the server-visible name with the configured prefix. XUID is optional metadata.
 
-## Does disabling the whitelist disable scoped access?
+## Does Floodgate work on Paper or Bukkit?
 
-No. `whitelist.enabled: false` disables the global `NETWORK` requirement, not Velocity Backend Admission.
+No. Floodgate identity resolution belongs to the Velocity build. A backend can receive synchronized permissions for Java identities, but it does not create a second Floodgate authority or match Floodgate grants locally.
 
-## Can Bukkit/Spigot use Velocity scoped access?
+## Is Floodgate enabled by default?
 
-No. The strict Bukkit/Spigot artifact is intended for standalone use.
+No. Set `identity.floodgate.enabled: true` only on a Velocity network that uses Geyser and Floodgate.
 
-## Does Paper run hybrid authentication itself?
+## Can one player have ONLINE and OFFLINE entries?
 
-No. Authentication-flow selection belongs to Velocity. Paper can participate as a forwarded backend in the supported topology.
+Yes. They are separate identities. A hybrid Velocity deployment can use both to choose an authentication flow, but the final admission decision uses the identity produced by that flow.
 
-## Does monban currently provide registration, login, or captcha?
+## Does disabling the whitelist disable backend restrictions?
+
+No. `whitelist.enabled: false` removes only the global `NETWORK` requirement. `GRANT_REQUIRED` backend policies still apply.
+
+## Can a backend have its own whitelist?
+
+Not in centralized mode. Administer whitelist, groups, and permissions on Velocity and synchronize the resulting state to participating backends.
+
+## Do Floodgate permissions reach backend plugins?
+
+Not in 3.3.0. Velocity evaluates Floodgate groups and direct permissions for admission and proxy permissions. A Bukkit or Paper backend resolves only Java `ONLINE` and `OFFLINE` identities, so it does not apply those entries as a local permission attachment. Keep permission-controlled features for Bedrock players on the proxy, or use a backend permissions plugin with its own Bedrock-aware integration.
+
+## Does monban require LuckPerms?
+
+No. monban can attach its own permission nodes on Bukkit and Paper. It can coexist with another permission provider, but monban's nodes do not require LuckPerms.
+
+## Does monban support deny grants or temporary grants?
+
+No. The current model has positive grants only, with no expiry or deny precedence.
+
+## Does monban provide registration, passwords, or captcha?
 
 No.
 
-## Does monban currently have temporary grants?
+## Why can a player join the proxy but not a backend?
 
-No.
+The player passed `NETWORK` admission and then hit a `GRANT_REQUIRED` backend policy without a matching `SERVER` or `SERVER_GROUP` grant. See [Backend Policies](/velocity/backend-policies/).

@@ -1,28 +1,30 @@
 ---
-title: Centralized Backend Permissions
-description: Set up Velocity-managed player groups and permissions on Bukkit or Paper backends.
+title: Centralized Permissions
+description: Give a backend plugin a permission managed by a Velocity player group.
 ---
 
-This guide gives `moderator` the CoreProtect inspect permission on `survival` without installing LuckPerms.
+This example grants CoreProtect's inspect node on `survival` through a monban group, without LuckPerms.
 
-## 1. Install the plugins
+## 1. Install monban on both sides
 
-Install `monban-velocity-<version>.jar` on Velocity and the matching Bukkit or Paper monban build on `survival`. Install CoreProtect on the same backend.
+Use:
 
-## 2. Enable backend permissions
+- `monban-velocity-3.3.0.jar` on Velocity;
+- `monban-paper-folia-3.3.0.jar` or the Bukkit/Spigot build on `survival`;
+- CoreProtect on `survival`.
 
-On Velocity, set this in `plugins/monban/config.yml`:
+## 2. Enable synchronization
+
+Velocity:
 
 ```yaml
 backend-permissions:
   enabled: true
 ```
 
-Restart Velocity. monban creates `plugins/monban/sync.yml` automatically with a random secret. Copy the generated file to the monban data directory on `survival`. Treat this secret like a credential and do not commit it to a public repository.
+Restart. Velocity creates `plugins/monban/sync.yml`. Copy it to `survival`.
 
-## 3. Identify the backend
-
-On `survival`, set this in `plugins/monban/config.yml` using the exact Velocity registered-server name:
+Backend:
 
 ```yaml
 backend-permissions:
@@ -30,7 +32,13 @@ backend-permissions:
   server-name: survival
 ```
 
-Paper must have Velocity forwarding enabled. If it is not, monban does not start centralized backend mode. The backend also needs `server-groups.yml` if it should use `SERVER_GROUP`-scoped permissions. Keep its server group definition consistent with the proxy:
+The backend must use Velocity forwarding and the exact registered-server name.
+
+This synchronization path applies to the Java `ONLINE` or `OFFLINE` identity resolved on the backend. Floodgate grants remain proxy-side in 3.3.0.
+
+## 3. Match server-group mapping if needed
+
+If the permission uses `SERVER_GROUP` scope, copy the same mapping to the backend's `server-groups.yml`:
 
 ```yaml
 schema-version: 1
@@ -40,9 +48,9 @@ groups:
       - survival
 ```
 
-## 4. Create and assign the group
+The `SERVER`-scoped example below does not need this mapping.
 
-Run on Velocity:
+## 4. Create and assign the group
 
 ```text
 /monban group create moderator
@@ -50,22 +58,18 @@ Run on Velocity:
 /monban user Miyu group add moderator
 ```
 
-For a group permission shared by every backend in `public`, use:
-
-```text
-/monban group moderator permission add group public coreprotect.inspect
-```
-
-The command administrator needs `monban.command.group`.
-
-## 5. Verify the result
-
-Use:
+## 5. Verify
 
 ```text
 /monban lookup Miyu
 ```
 
-The effective permissions should show `coreprotect.inspect` at `SERVER(survival)` with origin `GROUP:moderator`. After Miyu joins `survival`, CoreProtect sees the ordinary Bukkit permission node.
+The effective permissions should include `coreprotect.inspect` at `SERVER(survival)` with origin `GROUP:moderator`. Reconnect Miyu and run a CoreProtect inspect command.
 
-If the backend has not received a valid snapshot, inspect the Velocity and backend logs, verify the copied secret, confirm `backend-permissions.enabled: true` on both sides, and confirm the backend name matches Velocity. The backend does not register local `/monban whitelist` administration; use the proxy.
+If the node is missing, check:
+
+- both `backend-permissions` blocks are enabled;
+- `sync.yml` is identical;
+- the backend name matches Velocity exactly;
+- the backend starts with a valid `sync.yml` and no synchronization error;
+- the plugin uses the same node string.

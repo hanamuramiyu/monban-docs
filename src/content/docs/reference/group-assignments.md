@@ -1,9 +1,9 @@
 ---
 title: group-assignments.yml
-description: Reference for persistent player-to-group assignments.
+description: Persistent player-to-group assignments.
 ---
 
-`group-assignments.yml` maps explicit monban identities to player group IDs.
+`group-assignments.yml` assigns identities to player groups.
 
 ```yaml
 schema-version: 1
@@ -14,9 +14,16 @@ assignments:
       verified-uuid: 00000000-0000-0000-0000-000000000001
     group: moderator
   - identity:
-      type: OFFLINE
-      name: Builder
-    group: default
+      type: FLOODGATE
+      name: .BedrockName
+      xuid: '2535421234567890'
+    group: bedrock
 ```
 
-The `group` value must refer to an existing player group. ONLINE identities require `verified-uuid`; OFFLINE identities may optionally contain `technical-uuid`. Assignments are normally created through `/monban user <player> group add <group-id>`.
+The group must exist. Identities use the same field rules as `whitelist.yml`. Prefer:
+
+```text
+/monban user <player> group add <group-id>
+```
+
+Use the `offline`, `online`, or `floodgate` qualifier when the identity type must be explicit.

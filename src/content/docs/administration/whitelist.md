@@ -1,26 +1,24 @@
 ---
 title: Whitelist
-description: Manage the global monban whitelist on every supported platform.
+description: Manage the global NETWORK whitelist on standalone servers and Velocity.
 ---
 
-`/monban whitelist` is the normal operator-facing interface for `NETWORK` whitelist state on Bukkit/Spigot, Paper/Folia, and Velocity.
+`/monban whitelist` is the main interface for global network admission. The same command family exists on Bukkit, Spigot, Paper, Folia, and Velocity.
 
-## Permission
+Permission: `monban.command.whitelist`.
 
-```text
-monban.command.whitelist
-```
-
-## Enable and disable
+## Enable or disable admission
 
 ```text
 /monban whitelist enable
 /monban whitelist disable
 ```
 
-These commands change `whitelist.enabled` at runtime on Bukkit/Spigot, Paper/Folia, and Velocity. The updated configuration is saved before the runtime policy changes. If saving fails, the current runtime policy remains unchanged.
+The command persists `whitelist.enabled` before changing the runtime policy. If the save fails, the runtime policy remains unchanged.
 
-## Add
+Disabling the whitelist affects only the `NETWORK` requirement. Velocity backend policies remain active.
+
+## Add entries
 
 ```text
 /monban whitelist add offline <name>
@@ -28,31 +26,53 @@ These commands change `whitelist.enabled` at runtime on Bukkit/Spigot, Paper/Fol
 /monban whitelist add online <name> <uuid>
 ```
 
-The short ONLINE form resolves the official Mojang profile by name. The UUID form bypasses profile lookup and uses the supplied verified UUID. OFFLINE entries use the player name as the durable identity key.
+On Velocity, Floodgate entries use the same command family:
 
-## Remove
+```text
+/monban whitelist add floodgate <name>
+/monban whitelist add floodgate <name> <xuid>
+```
+
+| Form | Identity behavior |
+| --- | --- |
+| `offline <name>` | Name-based `OFFLINE` entry |
+| `online <name>` | Resolves the verified UUID through Mojang |
+| `online <name> <uuid>` | Uses the supplied UUID without profile lookup |
+| `floodgate <name>` | Name-based `FLOODGATE` entry |
+| `floodgate <name> <xuid>` | Same name key, with XUID metadata |
+
+Floodgate names must match the normalized Java username reported by Floodgate, including its configured prefix for unlinked accounts, such as `.BedrockName`.
+
+## Remove entries
 
 ```text
 /monban whitelist remove offline <name>
 /monban whitelist remove online <name>
 /monban whitelist remove online <name> <uuid>
+/monban whitelist remove floodgate <name>
+/monban whitelist remove floodgate <name> <xuid>
 ```
 
-## List
+Removal must identify the same identity type and key. A `FLOODGATE` name does not remove an `OFFLINE` record with the same text.
+
+## List entries
 
 ```text
-/monban whitelist list
-/monban whitelist list <page>
+/monban whitelist list [page]
 /monban whitelist list offline [page]
 /monban whitelist list online [page]
 ```
 
-Listings use a fixed page size of **10** entries.
+On Velocity, the listing can also be filtered by Floodgate:
 
-- ONLINE entries display the verified UUID.
-- OFFLINE entries display the player name and do not present a technical UUID as identity proof.
-- Out-of-range pages return an explicit operator-facing error instead of a blank page.
+```text
+/monban whitelist list floodgate [page]
+```
 
-:::note[Velocity NETWORK state]
-On Velocity, `/monban whitelist ...` and `/monban access ... network ...` manage the same `NETWORK` access state. They are not separate whitelists.
-:::
+Listings show ten entries per page and reject out-of-range pages. Online records display their verified UUID; Floodgate records display the name key.
+
+## Related behavior
+
+On Velocity, `/monban access ... network ...` writes the same `NETWORK` state. The whitelist commands are the shorter interface for that scope.
+
+Read [Player Identity](/concepts/player-identity/) before choosing `ONLINE`, `OFFLINE`, or `FLOODGATE`.

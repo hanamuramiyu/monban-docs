@@ -1,63 +1,62 @@
 ---
 title: Player Groups & Permissions
-description: Manage player groups, ACL, ordinary permission nodes, and effective access in monban.
+description: Combine access and permission nodes through direct entries and player groups.
 ---
 
-monban has two different kinds of groups:
+Player groups let Velocity administrators assign a reusable bundle of access and permission nodes. They are separate from server groups, which describe backend topology.
 
-| Name | Contains | Example |
-| --- | --- | --- |
-| Player `GROUP` | Players, ACL grants, and permissions | `moderator` |
-| `SERVER_GROUP` | Velocity backend servers | `public` |
-
-They are independent. A player group can grant access to a server group, but it is not itself a server group.
-
-## Group contents
+## What a player group contains
 
 A player group can contain:
 
-- `NETWORK` access to the network;
-- `SERVER_GROUP` access to a configured backend group;
-- `SERVER` access to one backend;
+- `NETWORK` access;
+- `SERVER_GROUP` access;
+- `SERVER` access;
 - ordinary permission nodes at any of those scopes.
 
-For example, one group can provide both access and local permissions:
+Example:
 
 ```text
 moderator
 ├── NETWORK
-├── SERVER_GROUP public
-├── SERVER staff
+├── SERVER_GROUP testing
 ├── SERVER survival: coreprotect.inspect
-└── SERVER staff: minecraft.command.ban
+└── SERVER survival: minecraft.command.ban
 ```
 
-## Direct entries and inheritance
+The first two entries affect where the player may connect. The last two affect what plugins allow after connection.
 
-Players can receive access and permissions directly. Existing direct ACL grants remain independent from groups and are not removed when a group is assigned or removed.
+## Direct and inherited state
 
-When a player has several groups, monban combines their positive grants. A repeated grant is shown once with all of its origins.
+Direct grants and group grants are combined. Removing a group does not remove direct entries, and removing a direct entry does not remove an identical grant inherited from a group.
 
-There are no deny entries, permission weights, inheritance between player groups, wildcards, or temporary expirations in this version.
+If several groups grant the same access or node, the effective view combines it and keeps all origins.
 
-## Administration
+There is no deny entry, group inheritance, permission weight, wildcard expansion, or temporary assignment in the current release.
 
-The group administration commands are available on Velocity:
+## Scope evaluation
+
+| Scope | Proxy | Backend |
+| --- | --- | --- |
+| `NETWORK` | Evaluated for proxy permissions | Included in synchronized state |
+| `SERVER_GROUP` | Evaluated for the current backend's group | Included in synchronized state |
+| `SERVER` | Evaluated for the current backend | Included in synchronized state |
+
+On a backend, monban applies the resulting nodes through a normal permission attachment. Another permissions plugin can still supply additional nodes.
+
+The backend matches those nodes against a Java `ONLINE` or `OFFLINE` identity. `FLOODGATE` assignments are evaluated on Velocity for admission and proxy permissions, but 3.3.0 does not re-match them on the backend.
+
+## Administrative workflow
+
+Create a group, add entries, assign it, then inspect the result:
 
 ```text
 /monban group create moderator
-/monban group moderator access grant group public
 /monban group moderator permission add server survival coreprotect.inspect
 /monban user Miyu group add moderator
-/monban user Miyu permission add network someproxy.command
-```
-
-The command permission is `monban.command.group`. Group IDs must match `[a-z0-9][a-z0-9._-]{0,63}`. Permission nodes must be non-blank and contain no whitespace.
-
-## Effective state
-
-```text
 /monban lookup Miyu
 ```
 
-The lookup shows assigned groups, effective access, effective permissions, and whether each entry came directly from the player or from a named group. This makes it possible to see why an entry is active without inspecting the storage files manually.
+The commands are Velocity-only and require `monban.command.group`. Group IDs use `[a-z0-9][a-z0-9._-]{0,63}`. Permission nodes must be non-blank and contain no whitespace.
+
+For the full grammar, see [Commands & Permissions](/reference/commands/). For persistent file shapes, see the [data file reference](/reference/player-groups/).

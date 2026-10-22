@@ -1,19 +1,11 @@
 ---
 title: whitelist.yml
-description: Persistent NETWORK whitelist storage format.
+description: Persistent NETWORK whitelist storage in monban 3.3.0.
 ---
 
-`whitelist.yml` is the persistent source of `NETWORK` grants used by the global monban whitelist.
-
-:::caution[Prefer commands for administration]
-Prefer `/monban whitelist` for normal operator changes. Persistent files are storage formats, not the primary administration interface.
-:::
+`whitelist.yml` stores direct `NETWORK` grants. Prefer `/monban whitelist` for changes; this page documents the storage format and recovery behavior.
 
 ## Schema
-
-The file uses schema version `1` and an `entries` list.
-
-Example with both identity types:
 
 ```yaml
 schema-version: 1
@@ -23,30 +15,25 @@ entries:
     verified-uuid: 00000000-0000-0000-0000-000000000000
   - type: OFFLINE
     name: hanamuramiyu2
+  - type: FLOODGATE
+    name: .BedrockName
+    xuid: '2535421234567890'
 ```
-
-An OFFLINE entry may contain a `technical-uuid` when that technical value has been persisted, but it is not verified account proof and does not participate as the durable OFFLINE identity key.
 
 ## Identity fields
 
-### ONLINE
+| Type | Required fields | Optional fields | Durable key |
+| --- | --- | --- | --- |
+| `ONLINE` | `type`, `name`, `verified-uuid` | — | Verified UUID |
+| `OFFLINE` | `type`, `name` | `technical-uuid` | Normalized name |
+| `FLOODGATE` | `type`, `name` | `xuid` | Normalized Floodgate name |
 
-| Field | Required | Meaning |
-| --- | :---: | --- |
-| `type` | ✓ | `ONLINE` |
-| `name` | ✓ | Current username metadata |
-| `verified-uuid` | ✓ | Durable verified identity key |
+`technical-uuid` is platform metadata, not proof of Java account ownership. `xuid` is Bedrock metadata, not the Floodgate matching key.
 
-### OFFLINE
+## Validation
 
-| Field | Required | Meaning |
-| --- | :---: | --- |
-| `type` | ✓ | `OFFLINE` |
-| `name` | ✓ | Durable normalized-name identity key |
-| `technical-uuid` | <span class="table-muted">—</span> | Optional technical platform value; not identity proof |
+The file rejects malformed YAML, multiple documents, YAML aliases, duplicate keys, unknown fields, unsupported schema versions, invalid identities, and duplicate equivalent entries.
 
-## Validation and recovery
+## Persistence and recovery
 
-The parser rejects malformed YAML, unsupported schema versions, duplicate YAML keys, aliases, unknown fields, and invalid identity records.
-
-Writes use replacement-style persistence with a temporary file. If the primary file is missing and a valid recovery temporary file is present, monban can recover it. A malformed existing primary file remains an error rather than being silently replaced by temporary state.
+Writes use a temporary sibling file and replacement-style persistence. If the primary file is absent and a valid `whitelist.yml.tmp` exists, monban can recover it. A malformed primary file remains an error and is not silently replaced.

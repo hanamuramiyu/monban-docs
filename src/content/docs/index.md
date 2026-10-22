@@ -3,64 +3,52 @@ title: Introduction
 description: Minecraft access control for standalone servers and Velocity networks.
 ---
 
-**monban** is a Minecraft whitelist and access-control plugin for standalone servers and Velocity networks. It keeps player identity explicit and applies access decisions before a connection is admitted where that decision belongs.
+monban decides who may enter a Minecraft server or network. It combines a global whitelist, optional backend access rules, player groups, and ordinary permission nodes in one access-control layer.
 
-## Choose your deployment
+Use it in one of two roles:
 
-| Deployment | Use it when | Access authority |
+- **On a standalone server**, monban owns the whitelist for Bukkit, Spigot, Paper, or Folia.
+- **On Velocity**, monban owns network admission, can restrict individual backends, and can distribute Java player groups and permissions to Bukkit or Paper backends.
+
+The current release also resolves authenticated Bedrock players through Floodgate on Velocity. Java-only networks do not need Geyser or Floodgate.
+
+## Start with the shape of your network
+
+| Deployment | Use it when | monban controls |
 | --- | --- | --- |
-| **Bukkit / Spigot** | You need a compatibility-focused standalone installation. | The server |
-| **Paper / Folia** | You run a standalone modern server and want the preferred backend build. | The server |
-| **Velocity** | A proxy owns network admission and you need network or scoped access. | Velocity |
+| Bukkit / Spigot standalone | You need the compatibility build for one server. | Whitelist and local permissions |
+| Paper / Folia standalone | You want the modern backend build for one server. | Whitelist and local permissions |
+| Velocity network | A proxy owns admission across multiple backends. | Network admission, backend admission, groups, permissions, and Floodgate identity |
 
-Standalone installations use a global monban whitelist. Velocity can use the same global whitelist and additionally restrict individual backends or groups of backends.
+[Compare platforms](/getting-started/choosing-a-platform/) if you are unsure which build to install. For the underlying model, read [How monban Works](/concepts/how-it-works/).
 
-Velocity also provides built-in player groups and ordinary permission nodes. Groups can combine network access, backend access, and permissions; configured Bukkit/Paper backends receive the shared state and apply their local permission nodes without requiring LuckPerms.
-
-## Player identity
-
-monban distinguishes two identity types:
-
-- **ONLINE** — identity is anchored to a verified Minecraft UUID. The current username is metadata.
-- **OFFLINE** — identity is anchored to the normalized username. A technical UUID does not turn it into an ONLINE identity.
-
-This distinction is deliberate. A UUID is trusted as an ONLINE identity only when the platform authentication path provides the required provenance.
-
-[Read Player Identity →](/concepts/player-identity/)
-
-## Access model
-
-The global whitelist is the `NETWORK` access scope. On Velocity, monban also supports positive access grants for:
-
-- `SERVER_GROUP` — a named group of Velocity backends;
-- `SERVER` — one specific Velocity backend.
-
-Backend policies decide whether a backend is `OPEN` or requires one of those scoped grants. The global whitelist and backend admission are separate checks, so disabling the global whitelist does not disable restricted backends.
-
-[Read Access Model →](/concepts/access-model/)
-
-## Player groups and permissions
-
-Player `GROUP` definitions are separate from Velocity `SERVER_GROUP` definitions. A player can receive one or more groups, direct ACL grants, and direct permissions. Use `/monban lookup <player>` to inspect the effective result and its origins.
-
-[Read Player Groups & Permissions →](/concepts/player-groups/)
-
-## Hybrid authentication
-
-Velocity can optionally select an `ONLINE` or `OFFLINE` authentication flow for each connection on a supported hybrid deployment. The selection does not authenticate a player by itself: Velocity remains responsible for the selected authentication flow, and monban resolves the final identity from the resulting authentication facts.
-
-[Read Hybrid Authentication →](/velocity/hybrid-authentication/)
-
-## Fail-closed access
-
-When monban cannot safely initialize or verify security-sensitive access state, it does not silently turn that failure into an allow decision. Startup access guards remain in place until the access plane is ready, and malformed security-relevant configuration causes startup to fail visibly.
-
-## Start here
+## Common paths
 
 <div class="doc-link-grid">
-  <a class="doc-link-card" href="/getting-started/installation/"><strong>New installation</strong><span>Installation →</span></a>
-  <a class="doc-link-card" href="/getting-started/choosing-a-platform/"><strong>Not sure which build?</strong><span>Choosing a Platform →</span></a>
-  <a class="doc-link-card" href="/standalone/setup/"><strong>Standalone server</strong><span>Standalone Setup →</span></a>
-  <a class="doc-link-card" href="/velocity/setup/"><strong>Velocity network</strong><span>Velocity Setup →</span></a>
-  <a class="doc-link-card" href="/guides/centralized-permissions/"><strong>Backend permissions</strong><span>Centralized Setup →</span></a>
+  <a class="doc-link-card" href="/getting-started/installation/"><strong>Install monban</strong><span>Choose and install a build →</span></a>
+  <a class="doc-link-card" href="/standalone/setup/"><strong>Set up a standalone server</strong><span>Replace the vanilla whitelist →</span></a>
+  <a class="doc-link-card" href="/velocity/setup/"><strong>Set up a Velocity network</strong><span>Configure network admission →</span></a>
+  <a class="doc-link-card" href="/velocity/geyser-floodgate/"><strong>Add Bedrock players</strong><span>Configure Geyser and Floodgate →</span></a>
 </div>
+
+## Three identities, one decision
+
+monban records why an identity can be trusted instead of treating every UUID as equivalent:
+
+| Identity | Durable key | Used for |
+| --- | --- | --- |
+| `ONLINE` | Verified Java UUID | Authenticated Java accounts |
+| `OFFLINE` | Normalized username | Name-based Java identities |
+| `FLOODGATE` | Normalized Floodgate Java username | Authenticated Bedrock players on Velocity |
+
+[Player Identity](/concepts/player-identity/) explains the security boundaries. [Access Model](/concepts/access-model/) explains how whitelist entries and scoped grants combine.
+
+## Access and permissions are related, not identical
+
+Access grants answer **where a player may connect**. Permission nodes answer **what a plugin allows after the player is connected**. Both can be supplied directly or through a player group, and both use the same `NETWORK`, `SERVER_GROUP`, and `SERVER` scopes.
+
+Use `/monban lookup <player>` on Velocity to inspect the combined result and see which group or direct entry produced it.
+
+## Failure behavior
+
+monban treats access control as security-sensitive. Invalid configuration, unresolved backend names, required-provider failures, and login-time Floodgate provider errors do not become silent allow decisions. A backend without accepted synchronized state exposes no monban permissions rather than falling back to local state.

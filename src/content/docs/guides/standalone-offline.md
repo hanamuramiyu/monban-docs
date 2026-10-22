@@ -1,16 +1,18 @@
 ---
 title: Standalone Offline Server
-description: Use explicit OFFLINE identity on an offline-mode standalone server.
+description: Use name-based OFFLINE identities on an offline-mode Java server.
 ---
 
-Use this setup when the standalone server runs with `online-mode=false` and access should be name-based.
+Use this setup when one Bukkit, Spigot, Paper, or Folia server runs with `online-mode=false` and admission should be name-based.
 
-## Option A — `AUTO`
+## Server settings
 
 ```properties
 online-mode=false
 white-list=false
 ```
+
+## monban configuration
 
 ```yaml
 config-version: 1
@@ -23,35 +25,29 @@ whitelist:
 
 identity:
   mode: AUTO
+
+backend-permissions:
+  enabled: false
+  server-name: ''
 ```
 
-Because the platform is not authenticating the connection, `AUTO` resolves it as OFFLINE.
+Because the platform does not authenticate the connection, `AUTO` resolves the player as `OFFLINE`. You can set `identity.mode: OFFLINE` to force that behavior even if the platform reports an authentication fact later.
 
-## Option B — force OFFLINE semantics
-
-```yaml
-config-version: 1
-
-deployment:
-  mode: STANDALONE
-
-whitelist:
-  enabled: true
-
-identity:
-  mode: OFFLINE
-```
-
-`OFFLINE` always uses OFFLINE identity semantics regardless of a technical UUID supplied by the platform.
-
-## Add a player
+## Add the name
 
 ```text
 /monban whitelist add offline hanamuramiyu2
 ```
 
-The normalized username is the durable identity key. A technical UUID does not prove Minecraft account ownership and does not turn the entry into ONLINE identity.
+Names are matched case-insensitively after normalization.
 
-:::caution[Offline-mode identity is name-based]
-Anyone who can successfully present the same username to an offline-mode server presents the same OFFLINE identity to monban. monban's current whitelist is access control; it does not add a registration/login system.
+## Verify
+
+- The intended name can join.
+- The same name with different capitalization still matches.
+- A different name is denied while the whitelist is enabled.
+- `/monban whitelist list offline` shows the stored name.
+
+:::caution[Offline mode is not account authentication]
+Anyone who can present the same name to the server presents the same `OFFLINE` identity. monban does not provide registration, passwords, or session protection.
 :::

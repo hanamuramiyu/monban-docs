@@ -1,33 +1,31 @@
 ---
-title: Hybrid Premium + Offline Network
-description: Configure the supported Velocity hybrid topology for ONLINE and OFFLINE players.
+title: Hybrid Network
+description: Configure a supported Velocity topology for ONLINE and OFFLINE Java flows.
 ---
 
-This guide uses the runtime-validated Paper topology for hybrid v1.
+Hybrid authentication chooses a Velocity flow before login. It is separate from Floodgate: Floodgate handles Bedrock identity, while hybrid handles the Java `ONLINE`/`OFFLINE` choice.
 
 ## 1. Velocity
 
-Set Velocity's global authentication mode to:
+Set Velocity's global authentication mode:
 
 ```text
 online-mode=false
 ```
 
-Use **Velocity Modern Forwarding** for the backend connection path.
+Use Velocity Modern Forwarding to the backend.
 
 ## 2. Paper backend
 
-Configure the backend for the same proxy mode:
+Use a Paper backend with:
 
-```text
-Paper online-mode=false
-proxies.velocity.enabled=true
-proxies.velocity.online-mode=false
+```properties
+online-mode=false
 ```
 
-The Paper backend receives the resulting forwarded identity. It does not select the ONLINE/OFFLINE flow itself.
+Enable Velocity forwarding and set its backend-side online-mode setting to `false` according to the forwarding configuration you use.
 
-## 3. monban Velocity config
+## 3. monban
 
 ```yaml
 config-version: 1
@@ -43,36 +41,33 @@ identity:
   hybrid:
     enabled: true
     dual-entry-preference: ONLINE
+  floodgate:
+    enabled: false
+    require-provider: false
 ```
 
-## 4. Add the premium player as ONLINE
+## 4. Add both identity forms
+
+Premium Java account:
 
 ```text
 /monban whitelist add online hanamuramiyu <verified-uuid>
 ```
 
-An ONLINE-only match selects Velocity's ONLINE authentication path. A client that cannot complete that authentication cannot become the allowed ONLINE identity.
-
-## 5. Add the offline player as OFFLINE
+Name-based account:
 
 ```text
 /monban whitelist add offline hanamuramiyu2
 ```
 
-An OFFLINE-only match selects the OFFLINE flow and remains an OFFLINE monban identity.
+If both forms can match the same routing context, `dual-entry-preference` decides which flow is attempted.
 
-## 6. Understand dual entries
+## 5. Verify
 
-If the same presented player context can match both ONLINE and OFFLINE entries, `dual-entry-preference` decides which flow is selected.
+- A valid ONLINE record selects the ONLINE flow and completes Mojang authentication.
+- An OFFLINE-only record selects the OFFLINE flow.
+- A cracked client cannot satisfy an ONLINE-only path.
+- The backend receives the expected forwarded identity.
+- monban still evaluates the final identity type, not the pre-login hint.
 
-```yaml
-dual-entry-preference: ONLINE
-```
-
-Use `OFFLINE` only when you intentionally prefer the OFFLINE flow for dual-entry cases.
-
-:::caution[Flow selection is not proof]
-Pre-login routing data can choose a flow, but actual ONLINE identity is established only after Velocity authentication provides the required provenance.
-:::
-
-Read [Hybrid Authentication](/velocity/hybrid-authentication/) for the security model and supported combinations.
+See [Hybrid Authentication](/velocity/hybrid-authentication/) for the security model and rejected combinations.

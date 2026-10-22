@@ -1,19 +1,9 @@
 ---
 title: backend-access.yml
-description: Schema and validation reference for Velocity backend admission policies.
+description: Velocity backend admission policy storage.
 ---
 
-`backend-access.yml` defines the default Backend Admission mode and optional group/server overrides.
-
-A missing file is created as:
-
-```yaml
-schema-version: 1
-default: OPEN
-policies: []
-```
-
-## Schema
+`backend-access.yml` defines the default backend mode and optional group or server overrides.
 
 ```yaml
 schema-version: 1
@@ -29,25 +19,23 @@ policies:
     mode: OPEN
 ```
 
-## Fields
+Missing file:
 
-| Field | Accepted values | Meaning |
+```yaml
+schema-version: 1
+default: OPEN
+policies: []
+```
+
+| Field | Values | Meaning |
 | --- | --- | --- |
-| `schema-version` | `1` | File schema version |
 | `default` | `OPEN`, `GRANT_REQUIRED` | Fallback mode |
-| `policies` | list | Explicit policy overrides |
-| `policies[].scope.type` | `SERVER_GROUP`, `SERVER` | Override target type |
-| `policies[].scope.id` | valid group ID or canonical backend name | Override target |
-| `policies[].mode` | `OPEN`, `GRANT_REQUIRED` | Effective mode at that scope |
+| `policies[].scope.type` | `SERVER_GROUP`, `SERVER` | Override target |
+| `policies[].scope.id` | Group ID or canonical backend name | Override key |
+| `policies[].mode` | `OPEN`, `GRANT_REQUIRED` | Effective mode |
 
-`NETWORK` is invalid in this file because Network Admission and Backend Admission are separate layers.
+`NETWORK` is invalid here. Backend admission is separate from network admission.
 
-## Validation
+Duplicate policies, unknown fields, aliases, invalid modes, unknown groups, and unknown backends are rejected. Precedence is `SERVER` → `SERVER_GROUP` → `default`.
 
-The parser rejects malformed/unsupported structure, unknown fields, duplicate keys/aliases, unsupported modes, and duplicate policies for the same scope.
-
-At Velocity startup, every referenced group must exist. Every server policy must reference an existing backend using its exact canonical Velocity name; persistent policy keys are not silently canonicalized.
-
-Policy precedence is `SERVER` → `SERVER_GROUP` → `default`.
-
-For behavior and examples, see [Backend Policies](/velocity/backend-policies/).
+See [Backend Policies](/velocity/backend-policies/).

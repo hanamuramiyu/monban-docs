@@ -1,20 +1,20 @@
 ---
 title: Standalone Online Server
-description: Use monban on an online-mode standalone Bukkit, Spigot, Paper, or Folia server.
+description: Use UUID-backed ONLINE identities on an authenticated Java server.
 ---
 
-Use this setup when the standalone Minecraft server authenticates players normally with `online-mode=true`.
+Use this setup when one Bukkit, Spigot, Paper, or Folia server authenticates Java players with `online-mode=true`.
 
-## 1. Server settings
+## Server settings
 
 ```properties
 online-mode=true
 white-list=false
 ```
 
-`white-list=false` gives whitelist ownership to monban.
+The native whitelist must be disabled before monban can own admission.
 
-## 2. monban config
+## monban configuration
 
 ```yaml
 config-version: 1
@@ -27,20 +27,35 @@ whitelist:
 
 identity:
   mode: AUTO
+
+backend-permissions:
+  enabled: false
+  server-name: ''
 ```
 
-With `AUTO`, the standalone login path uses the server's authenticated online-mode fact, so authenticated players resolve as ONLINE identity.
+With `AUTO`, an authenticated login becomes `ONLINE`.
 
-## 3. Add an ONLINE player
+## Add the account
+
+Resolve the profile through Mojang:
+
+```text
+/monban whitelist add online hanamuramiyu
+```
+
+Or supply the verified UUID directly:
 
 ```text
 /monban whitelist add online hanamuramiyu <verified-uuid>
 ```
 
-Do not replace the UUID with an offline technical UUID. The entry is intended to match independently authenticated ONLINE identity.
+Do not use an offline technical UUID for an intended ONLINE record.
 
-## 4. Verify
+## Verify
 
-Reconnect with the allowed account and confirm that a non-whitelisted ONLINE identity is denied.
+1. Join with the intended account.
+2. Confirm a second, non-whitelisted account is denied.
+3. Run `/monban whitelist list online` and check the stored UUID.
+4. Confirm `/whitelist` is blocked and `/monban whitelist` is the only administration path.
 
-See [Player Identity](/concepts/player-identity/) for why ONLINE identity is UUID-anchored.
+See [Player Identity](/concepts/player-identity/) for matching rules.

@@ -1,18 +1,9 @@
 ---
 title: server-groups.yml
-description: Schema and validation reference for Velocity server groups.
+description: Velocity backend topology used by scoped access and policies.
 ---
 
-`server-groups.yml` defines named Velocity backend groups used by scoped grants and backend policies.
-
-A missing file is created as:
-
-```yaml
-schema-version: 1
-groups: []
-```
-
-## Schema
+`server-groups.yml` maps each Velocity backend to at most one named server group.
 
 ```yaml
 schema-version: 1
@@ -23,25 +14,28 @@ groups:
       - test-survival
 ```
 
-| Field | Type | Rules |
+Missing file:
+
+```yaml
+schema-version: 1
+groups: []
+```
+
+## Fields
+
+| Field | Type | Rule |
 | --- | --- | --- |
 | `schema-version` | integer | Must be `1` |
-| `groups` | list | List of group objects |
-| `groups[].id` | string | Must match `[a-z0-9][a-z0-9._-]{0,63}` |
-| `groups[].servers` | list of strings | Non-blank, unpadded Velocity backend references |
+| `groups[].id` | string | `[a-z0-9][a-z0-9._-]{0,63}` |
+| `groups[].servers` | string list | Non-blank, unpadded backend names |
 
 ## Validation
 
-The file rejects:
+- Unknown fields, aliases, duplicate YAML keys, and unsupported versions are rejected.
+- Group IDs and backend membership must be unique.
+- A backend may appear in only one group.
+- Velocity must resolve every backend name at startup.
 
-- unsupported schema versions;
-- unknown fields;
-- duplicate YAML keys or aliases;
-- duplicate group IDs;
-- a duplicate server inside one group;
-- the same server appearing in multiple groups;
-- blank or padded server names.
+Persistent `SERVER` scopes and backend policies use the canonical names resolved by Velocity. A typo fails startup rather than creating an empty group.
 
-Velocity startup additionally resolves every server reference against the configured proxy topology. Unknown backends fail startup. Runtime state uses Velocity's canonical backend names after successful resolution.
-
-For the operator workflow, see [Server Groups](/velocity/server-groups/).
+See [Server Groups](/velocity/server-groups/).

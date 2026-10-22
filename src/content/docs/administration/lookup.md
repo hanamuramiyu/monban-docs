@@ -1,31 +1,37 @@
 ---
 title: Lookup
-description: Inspect a player's identity, groups, effective ACL, and permissions on Velocity.
+description: Inspect effective groups, access, and permissions for a Java identity on Velocity.
 ---
 
-`/monban lookup` is available on **Velocity only**.
-
-## Permission
-
-```text
-monban.command.lookup
-```
-
-## Command
+`/monban lookup` is available on Velocity and requires `monban.command.lookup`.
 
 ```text
 /monban lookup <player>
 ```
 
-The lookup displays:
+The command builds an effective view for the player name:
 
-- the player's ONLINE identity when the official Mojang profile can be resolved;
-- the player's OFFLINE identity based on the normalized name;
-- the player's assigned groups;
-- effective `NETWORK`, `SERVER_GROUP`, and `SERVER` access with its source;
-- effective permissions with their scope and source;
-- whether the ONLINE or OFFLINE identity is present in the global `NETWORK` whitelist.
+- the `ONLINE` identity when Mojang resolves the name;
+- the `OFFLINE` identity derived from the same name;
+- `NETWORK` whitelist status for those Java identities;
+- assigned player groups;
+- effective access scopes and their origins;
+- effective permission nodes and their origins.
 
-Direct entries are marked as direct grants. Entries inherited from a player group include that group ID. The output is an effective view: duplicate access or permission entries are combined while all known origins remain visible.
+Duplicate entries are combined, while direct and group origins remain visible.
 
-If the Mojang profile service is unavailable, monban reports the problem and continues with the OFFLINE identity only. A missing Mojang profile is not an error; the result contains the OFFLINE identity and its whitelist status.
+## Profile lookup behavior
+
+A missing Mojang profile is not an error: monban continues with the `OFFLINE` identity. If the profile service is temporarily unavailable, the output warns that it is showing the OFFLINE identity only.
+
+## Floodgate is not inferred from a name
+
+The lookup command accepts a Java player name, not an identity type. It does not discover an arbitrary `FLOODGATE` record by asking Floodgate or guessing the Bedrock name.
+
+To inspect stored Bedrock access, use the relevant list command, for example:
+
+```text
+/monban whitelist list floodgate
+```
+
+Then verify live admission by reconnecting through Geyser. Use [Status](/administration/status/) for configuration and topology counts, not for per-player state.

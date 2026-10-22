@@ -1,9 +1,9 @@
 ---
 title: player-groups.yml
-description: Reference for persistent monban player group definitions.
+description: Persistent Velocity player group definitions.
 ---
 
-`player-groups.yml` is managed by Velocity group commands. It uses schema version `1` and stores player groups separately from Velocity `SERVER_GROUP` definitions.
+`player-groups.yml` stores reusable access entries and permission nodes. It is separate from `server-groups.yml`.
 
 ```yaml
 schema-version: 1
@@ -12,9 +12,9 @@ groups:
     access-grants:
       - type: NETWORK
       - type: SERVER_GROUP
-        id: public
+        id: testing
       - type: SERVER
-        id: staff
+        id: survival
     permissions:
       - scope:
           type: SERVER
@@ -25,6 +25,6 @@ groups:
         node: someproxy.command
 ```
 
-Group IDs must match `[a-z0-9][a-z0-9._-]{0,63}`. Access and permission entries must be unique within a group. Supported scope types are `NETWORK`, `SERVER_GROUP`, and `SERVER`.
+Group IDs use `[a-z0-9][a-z0-9._-]{0,63}`. Entries must be unique within a group. Supported scopes are `NETWORK`, `SERVER_GROUP`, and `SERVER`; non-network scopes require an `id`.
 
-The file is persistent state, not a platform configuration file. Prefer `/monban group ...` for mutations so the proxy broadcasts the updated state to backends.
+This is authoritative state, not a config file. Prefer `/monban group` so Velocity broadcasts changes to synchronized backends.

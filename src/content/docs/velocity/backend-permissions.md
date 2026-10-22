@@ -1,46 +1,53 @@
 ---
 title: Backend Permissions
-description: Apply centralized monban permissions to Bukkit and Paper backend plugins.
+description: Apply centralized monban permissions to Bukkit and Paper backends.
 ---
 
-Velocity can centrally store and distribute player groups, ACL, and permissions. It cannot directly become a Bukkit permission provider for a plugin running on another server, so monban must be installed on that backend as well.
+Velocity stores the authoritative groups and permissions, but each backend runs in a separate JVM. Install monban on a backend when local plugins should receive monban nodes there.
 
-## Required topology
+## Required pieces
 
-```text
-Velocity
-└── monban
-    ├── lobby
-    │   └── monban + backend plugin
-    ├── survival
-    │   └── monban + CoreProtect
-    └── staff
-        └── monban + backend plugins
+1. Velocity with monban as the network authority.
+2. A matching Bukkit or Paper monban build on each participating backend.
+3. `backend-permissions.enabled: true` on both sides.
+4. The exact Velocity registered-server name in the backend configuration.
+5. The same `sync.yml` secret on Velocity and every backend.
+
+## Configuration
+
+Velocity:
+
+```yaml
+backend-permissions:
+  enabled: true
 ```
 
-Install monban on each backend where a plugin must receive a node. The backend does not need LuckPerms for monban's own grants.
+Backend:
 
-## Scopes on a backend
+```yaml
+backend-permissions:
+  enabled: true
+  server-name: survival
+```
 
-For a backend named `survival`, monban applies permissions from:
+Velocity creates `sync.yml` automatically. Copy it to the backend and keep it private. Do not copy `state-revision`.
+
+## Scope resolution
+
+For a backend named `survival`, monban applies permission nodes from:
 
 1. `NETWORK`;
-2. the matching `SERVER_GROUP`, if the backend belongs to one;
-3. `SERVER survival`.
+2. `SERVER_GROUP` if `survival` belongs to a configured group;
+3. `SERVER(survival)`.
 
-The same rule applies to permissions inherited from player groups and permissions granted directly to a player.
+The same rules apply to direct and group permissions. On the backend, monban attaches the resulting nodes through its own permission provider, so LuckPerms is not required for these grants.
 
-## Synchronization
+Backend matching uses the Java identity resolved locally. Floodgate groups and direct permissions are evaluated by Velocity, but 3.3.0 does not create a `FLOODGATE` attachment on the backend. See [Backend Synchronization](/concepts/backend-sync/#backend-identity-boundary).
 
-Velocity sends a signed full state snapshot containing:
+## Synchronization and failure behavior
 
-- direct ACL grants;
-- player group definitions;
-- player-to-group assignments;
-- direct player permissions.
+Velocity sends a signed full snapshot and rejects stale revisions. A configured backend exposes no synchronized monban permissions until the first valid snapshot arrives. This affects permissions only; Velocity remains responsible for admission.
 
-The backend accepts only snapshots signed by its configured secret and ignores older revisions. Until the first valid snapshot arrives, a synchronized backend does not allow a whitelist decision based on local fallback state.
+If the secret is missing, different, or invalid, fix the configuration and restart. Do not expect local whitelist state to act as a fallback.
 
-When a new snapshot arrives, online players' permission attachments are refreshed. New joins use the latest accepted snapshot.
-
-Configure `backend-permissions` in `config.yml` on the proxy and each backend, then copy the automatically generated [`sync.yml`](/reference/sync/) from the proxy to each backend. Legacy `backend.yml` configurations are no longer needed for new installations.
+Read [Backend Synchronization](/concepts/backend-sync/) for the model and [Centralized Permissions](/guides/centralized-permissions/) for a complete example.

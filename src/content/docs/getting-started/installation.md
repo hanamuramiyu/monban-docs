@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Download monban and choose the correct build for your platform.
+description: Download the correct monban artifact and complete the first startup safely.
 ---
 
 <div class="download-actions">
@@ -8,44 +8,36 @@ description: Download monban and choose the correct build for your platform.
   <a class="download-button secondary" href="https://github.com/hanamuramiyu/monban/releases">GitHub Releases</a>
 </div>
 
-## Choose the correct build
+## Pick one artifact
 
-| Platform | Artifact |
-| --- | --- |
-| Bukkit / Spigot | `monban-bukkit-spigot-<version>.jar` |
-| Paper / Folia | `monban-paper-folia-<version>.jar` |
-| Velocity | `monban-velocity-<version>.jar` |
+| Platform | Artifact | Runtime |
+| --- | --- | --- |
+| Bukkit / Spigot | `monban-bukkit-spigot-3.3.0.jar` | Java 21+ |
+| Paper / Folia | `monban-paper-folia-3.3.0.jar` | Java 21+; Paper `26.1+` requires Java 25 |
+| Velocity | `monban-velocity-3.3.0.jar` | Java 21+ |
 
-The **Paper / Folia** artifact is a Paper plugin and is not the Bukkit compatibility artifact. Use the separate **Bukkit / Spigot** build when Paper APIs are unavailable. Velocity has its own proxy build.
+The Paper/Folia artifact is a Paper plugin, not a renamed Bukkit artifact. Do not install both backend builds on the same server.
 
-## Java requirements
+## Install the plugin
 
-monban distributable bytecode targets **Java 21**.
+1. Stop the server or proxy.
+2. Put the selected JAR in its `plugins/` directory.
+3. On a standalone Bukkit, Spigot, Paper, or Folia server, set `white-list=false` in `server.properties`.
+4. Start once so monban can create `plugins/monban/` and its initial configuration.
+5. Edit `plugins/monban/config.yml`.
+6. Restart and verify that monban loaded without an access-control error.
 
-| Runtime | Java requirement |
-| --- | --- |
-| Bukkit / Spigot | Java 21 |
-| Velocity | Java 21 |
-| Paper `1.20` through `1.21.11` | Java 21 |
-| Paper `26.1+` | Java 25 |
-
-:::note[Bytecode vs. server runtime]
-monban is compiled for Java 21 bytecode, but a modern Paper server may itself require Java 25 to start. In that case, run the server on Java 25; the Java 21-targeted monban plugin remains compatible with that newer JVM.
+:::caution[The native whitelist stays under your control]
+monban does not disable Minecraft's native whitelist. On a standalone server it must already be disabled, otherwise two whitelist authorities would compete.
 :::
 
-## Install
+## Choose the next guide
 
-1. Download the artifact for your platform.
-2. Put the JAR in the platform's `plugins/` directory.
-3. For a standalone Bukkit/Spigot or Paper/Folia server, set `white-list=false` in `server.properties` **before starting monban**.
-4. Start the server or proxy so monban can create its data directory and default configuration.
-5. Configure `plugins/monban/config.yml`.
-6. Restart and manage access with `/monban ...`.
+- [Standalone Setup](/standalone/setup/) for Bukkit, Spigot, Paper, or Folia.
+- [Velocity Setup](/velocity/setup/) for a proxy network.
+- [Geyser & Floodgate](/velocity/geyser-floodgate/) for Bedrock players.
+- [Centralized Permissions](/guides/centralized-permissions/) when backend plugins should receive monban permissions.
 
-:::caution[Standalone whitelist ownership]
-A standalone monban installation requires the native Minecraft whitelist to be disabled with `white-list=false`. monban does not silently disable it for you.
-:::
+## Upgrade an existing installation
 
-Continue with [Standalone Setup](/standalone/setup/) or [Velocity Setup](/velocity/setup/).
-
-For a network where monban should apply permissions to backend plugins, install the Velocity build on the proxy and the matching Bukkit or Paper build on each backend that needs those permissions. Continue with [Centralized Backend Permissions](/guides/centralized-permissions/).
+Follow [Upgrading to 3.3](/getting-started/upgrading-to-3-3/) before replacing an older Velocity configuration. The new `identity.floodgate` section is explicit and is disabled by default.

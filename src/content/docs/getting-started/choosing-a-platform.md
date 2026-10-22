@@ -1,49 +1,57 @@
 ---
 title: Choosing a Platform
-description: Choose the monban build and deployment model that matches your server topology.
+description: Choose the monban build that matches where access decisions should happen.
 ---
 
-Choose the platform based on **where access authority belongs**.
-
-## Feature comparison
+Choose by **access authority**, not only by the server software in front of you.
 
 | Capability | Bukkit / Spigot | Paper / Folia | Velocity |
 | --- | :---: | :---: | :---: |
-| Standalone whitelist | ✓ | ✓ | <span class="table-muted">—</span> |
-| Network whitelist | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
-| Player permissions | ✓ | ✓ | ✓ |
-| Server groups | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
-| Per-server grants | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
-| Backend policies | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
-| Hybrid auth selection | <span class="table-muted">—</span> | <span class="table-muted">—</span> | ✓ |
-| Folia-native | <span class="table-muted">—</span> | ✓ | <span class="table-muted">—</span> |
+| Standalone whitelist | ✓ | ✓ | — |
+| Network whitelist | — | — | ✓ |
+| Scoped backend access | — | — | ✓ |
+| Player groups and permissions | File-defined | File-defined | Managed + synchronized |
+| Synchronized backend permissions | Receives | Receives | Sends |
+| Hybrid auth-flow selection | — | — | ✓ |
+| Floodgate identity | — | — | ✓ |
+| Native Folia scheduling | — | ✓ | — |
 
-## Use Bukkit / Spigot when
+## Bukkit / Spigot
 
-Use `monban-bukkit-spigot-<version>.jar` when you need a compatibility-focused **standalone** installation and Paper APIs are unavailable.
+Use `monban-bukkit-spigot` for one server when compatibility with the Bukkit API matters. It can own that server's whitelist and apply local permission attachments, but it does not provide Velocity server groups, backend policies, or scoped backend grants.
 
-This build owns access for that one server. It does not provide Velocity server groups, backend policies, scoped grants, or hybrid authentication-flow selection.
+## Paper / Folia
 
-## Use Paper / Folia when
+Use `monban-paper-folia` for one modern server. It provides the same standalone access authority as the Bukkit build and uses Paper/Folia-safe scheduling where platform work is required.
 
-Use `monban-paper-folia-<version>.jar` for a standalone Paper or Folia server. This is the preferred modern standalone backend and is packaged separately from the Bukkit/Spigot artifact.
+The Paper/Folia artifact rejects `deployment.mode: VELOCITY`. It can still be a backend behind Velocity when it receives synchronized permissions, but the Velocity build remains the network authority.
 
-Folia support is declared by the Paper/Folia build, and platform work is performed through Paper/Folia-safe scheduling paths where scheduling is required.
+## Velocity
 
-:::caution[Do not enable VELOCITY deployment on the Paper/Folia plugin]
-The current Paper/Folia plugin rejects `deployment.mode: VELOCITY`. A Paper backend can participate behind a Velocity proxy through the proxy's forwarding topology, including the tested hybrid topology, but the Paper plugin itself does not become the network authority.
-:::
+Use `monban-velocity` when one proxy should decide who joins the network and which backend each player may reach. Choose Velocity if you need any of these:
 
-## Use Velocity when
+- one network-wide whitelist;
+- restricted backends or server groups;
+- player groups and centralized permissions;
+- Bedrock identity through Geyser and Floodgate;
+- optional hybrid Java authentication.
 
-Use `monban-velocity-<version>.jar` when Velocity is the network access authority. Choose this deployment when you need any of the following:
+Install a matching Bukkit or Paper monban build only on backends that must apply synchronized permissions. A backend without monban cannot attach monban nodes to local players.
 
-- one global network whitelist;
-- server groups;
-- per-server or per-group grants;
-- backend access policies;
-- hybrid ONLINE/OFFLINE authentication-flow selection.
+## Common topologies
 
-For backend permissions in a Velocity network, install monban on the proxy and on each Bukkit/Paper backend where a plugin must receive a permission node. The proxy remains the central authority; backend instances apply the synchronized state locally.
+```text
+One Java server
+└── Bukkit/Spigot or Paper/Folia + monban
 
-Continue with [Velocity Setup](/velocity/setup/).
+Velocity network
+├── Velocity + monban
+└── Backends
+    ├── Paper + monban (optional, for permissions)
+    └── Paper without monban (network admission still applies)
+
+Geyser network
+└── Velocity + Geyser + Floodgate + monban
+```
+
+Continue with [Standalone Setup](/standalone/setup/) or [Velocity Setup](/velocity/setup/).

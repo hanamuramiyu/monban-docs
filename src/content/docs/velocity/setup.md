@@ -1,28 +1,15 @@
 ---
-title: Velocity Setup
-description: Configure monban with Velocity as the network access authority.
+title: Velocity Network
+description: Configure monban as the access authority for a Velocity proxy.
 ---
 
-Use the Velocity build when the proxy should own network admission, scoped backend access, player groups, and centralized permissions.
+Use `monban-velocity-3.3.0.jar` when Velocity should decide who enters the network and which backend each player may reach.
 
-<div class="download-actions compact">
-  <a class="download-button primary" href="https://modrinth.com/plugin/monban">Download on Modrinth</a>
-  <a class="download-button secondary" href="https://github.com/hanamuramiyu/monban/releases">GitHub Releases</a>
-</div>
+## 1. Install on the proxy
 
-## 1. Install the proxy build
+Place the Velocity build in `plugins/` and start the proxy once. monban creates `plugins/monban/config.yml` with a Velocity deployment shape.
 
-Use:
-
-```text
-monban-velocity-<version>.jar
-```
-
-Place it in Velocity's `plugins/` directory and start the proxy once. Velocity provides monban with its plugin data directory, normally `plugins/monban/` in a standard installation.
-
-## 2. Configure `config.yml`
-
-The Velocity default is:
+The initial configuration is safe to start with:
 
 ```yaml
 config-version: 1
@@ -38,65 +25,65 @@ identity:
   hybrid:
     enabled: false
     dual-entry-preference: ONLINE
+  floodgate:
+    enabled: false
+    require-provider: false
 ```
 
-The complete `identity.hybrid` mapping is required in a Velocity configuration even when `enabled: false`.
+Keep the complete `identity.hybrid` mapping even when hybrid is disabled. The `identity.floodgate` mapping is required by current configurations and is also disabled by default.
 
-See [`config.yml` Reference](/reference/config/).
+## 2. Decide which access layers you need
 
-## 3. Understand the two access layers
+| Layer | File | Purpose |
+| --- | --- | --- |
+| Network admission | `whitelist.yml` + `config.yml` | Require a global `NETWORK` grant |
+| Backend admission | `server-groups.yml` + `backend-access.yml` + `access-grants.yml` | Restrict selected backends |
+| Player groups | `player-groups.yml` + `group-assignments.yml` | Bundle access and permissions |
+| Direct permissions | `player-permissions.yml` | Grant nodes to one identity |
 
-Velocity evaluates two distinct concerns:
+You can begin with only the whitelist. Backend policies default to `OPEN` and server groups start empty.
 
-1. **Network Admission** — the global `NETWORK` whitelist, controlled by `whitelist.enabled`.
-2. **Backend Admission** — `OPEN` or `GRANT_REQUIRED` policies for individual backends and server groups.
+## 3. Add network access
 
-A player can therefore enter the network and still be denied access to a restricted backend.
+```text
+/monban whitelist add online hanamuramiyu <verified-uuid>
+/monban whitelist enable
+```
 
-## 4. Configure centralized backend state
+For a name-based identity, use `offline <name>`. For Bedrock, use the separate Floodgate setup.
 
-The proxy can distribute ACL, player groups, group assignments, and direct permissions to Bukkit/Paper backends over a signed plugin-message channel. Enable it in the proxy `config.yml`:
+## 4. Add backend restrictions when needed
+
+Create server groups in `server-groups.yml`, set the required policies in `backend-access.yml`, then grant access:
+
+```text
+/monban access grant group testing online hanamuramiyu <verified-uuid>
+```
+
+See [Server Groups](/velocity/server-groups/), [Backend Policies](/velocity/backend-policies/), and [Scoped Access](/velocity/scoped-access/).
+
+## 5. Add centralized permissions when needed
+
+Enable synchronization on Velocity:
 
 ```yaml
 backend-permissions:
   enabled: true
 ```
 
-Velocity creates `sync.yml` with a random secret automatically. Copy that file to every participating backend. On each backend, enable the feature and set its registered-server name:
+Copy the generated `sync.yml` to each backend that should apply monban permissions, and set that backend's exact `server-name`. Read [Backend Synchronization](/concepts/backend-sync/).
 
-```yaml
-backend-permissions:
-  enabled: true
-  server-name: survival
+## 6. Verify the installation
+
+```text
+/monban status
+/monban lookup Miyu
 ```
 
-Install the matching monban Bukkit or Paper build on every backend that must apply local permissions. A backend without monban cannot receive or apply these nodes. A backend with centralized mode does not register local whitelist administration; the proxy is the only authority.
-
-See [Backend Permissions](/velocity/backend-permissions/) and [Centralized Backend Permissions](/guides/centralized-permissions/).
-
-## 5. Velocity data files
-
-monban uses these files for the current Velocity access-control surface:
-
-| File | Purpose |
-| --- | --- |
-| `config.yml` | Deployment, whitelist toggle, identity, hybrid settings |
-| `whitelist.yml` | Persistent `NETWORK` grants |
-| `server-groups.yml` | Velocity backend grouping |
-| `access-grants.yml` | Persistent `SERVER_GROUP` and `SERVER` grants |
-| `backend-access.yml` | Backend access modes and overrides |
-| `player-groups.yml` | Player group definitions, ACL, and group permissions |
-| `group-assignments.yml` | Player-to-group assignments |
-| `player-permissions.yml` | Direct player permissions |
-| `sync.yml` | Shared secret for backend state synchronization |
-
-`server-groups.yml` and `backend-access.yml` receive empty/open defaults when missing. Whitelist and scoped grant storage is created when persistent mutations require it.
+Check the deployment, whitelist policy, identity mode, topology counts, effective groups, access origins, and permissions. A player who can enter the proxy but is denied a backend is usually hitting a `GRANT_REQUIRED` policy, not the network whitelist.
 
 ## Next steps
 
-<div class="doc-link-grid">
-  <a class="doc-link-card" href="/velocity/server-groups/"><strong>Server Groups</strong><span>Build backend groups →</span></a>
-  <a class="doc-link-card" href="/velocity/scoped-access/"><strong>Scoped Access</strong><span>Grant backend access →</span></a>
-  <a class="doc-link-card" href="/velocity/backend-policies/"><strong>Backend Policies</strong><span>Restrict backends →</span></a>
-  <a class="doc-link-card" href="/velocity/hybrid-authentication/"><strong>Hybrid Authentication</strong><span>Select auth flows →</span></a>
-</div>
+- [Geyser & Floodgate](/velocity/geyser-floodgate/) for Bedrock players.
+- [Hybrid Authentication](/velocity/hybrid-authentication/) for per-connection Java auth selection.
+- [Command Overview](/administration/commands/) for the operator surface.

@@ -1,72 +1,95 @@
 ---
 title: Troubleshooting
-description: Diagnose common monban startup and access-control problems.
+description: Diagnose startup, identity, admission, Floodgate, and synchronization failures.
 ---
 
-## Vanilla whitelist is enabled
+## Start with the failing boundary
 
-**Cause:** standalone Minecraft `white-list=true` makes the native whitelist a second access authority.
+| Symptom | Likely layer |
+| --- | --- |
+| Server or proxy stops during startup | Configuration or topology |
+| Player is denied before reaching the network | Identity or `NETWORK` admission |
+| Player joins the proxy but cannot switch backend | Backend admission |
+| A command is missing or denied | Command permission |
+| A permission node is missing on a backend | Synchronization |
+| Bedrock player is treated as Java or cannot join | Floodgate |
 
-**Fix:** set:
+## Native whitelist is enabled
+
+On standalone, set:
 
 ```properties
 white-list=false
 ```
 
-Restart the server. monban does not disable the native whitelist automatically.
+Restart. monban does not change the setting automatically.
 
-## Access verification is not ready
+## “Access verification is not ready”
 
-This message comes from the startup access guard. The access plane has not completed safe initialization, so monban denies access instead of allowing a connection before verification is ready.
+The startup guard is still active because initialization did not complete. Read the earlier startup error, fix it, and restart. monban denies access instead of opening the server before verification is ready.
 
-**Fix:** inspect the startup error earlier in the server/proxy console, correct that error, and restart.
+## Velocity config has hybrid on standalone
 
-## Hybrid on standalone
+Remove the entire `identity.hybrid` block from a `STANDALONE` configuration. It is rejected even when `enabled: false`.
 
-Standalone configuration does not accept a hybrid block, even with `enabled: false`.
+## Hybrid fails with online-mode enabled
 
-**Fix:** remove the entire `identity.hybrid` mapping.
+Hybrid v1 requires Velocity's global `online-mode=false` and `identity.mode: AUTO`. Either change those settings or disable hybrid.
 
-## Hybrid with `online-mode=true`
+## Unknown backend or server-group error
 
-Hybrid v1 currently requires Velocity global `online-mode=false`.
+Every name in `server-groups.yml`, `backend-access.yml`, and persistent `SERVER` grants must resolve to a real Velocity backend. Check spelling, case, and whitespace. Correct the file and restart.
 
-**Fix:** use the supported hybrid topology from [Hybrid Authentication](/velocity/hybrid-authentication/), or disable hybrid selection.
+## Whitelisted player is denied a backend
 
-## Hybrid with `identity.mode=OFFLINE`
+A `NETWORK` grant passes network admission only. If the target is `GRANT_REQUIRED`, also grant a matching `SERVER` or `SERVER_GROUP` entry.
 
-Hybrid selection requires `identity.mode: AUTO`.
+## Restricted backend is still restricted with the whitelist off
 
-**Fix:** set:
+This is expected. Backend admission is independent. Open the policy or grant the required scope.
 
-```yaml
-identity:
-  mode: AUTO
-  hybrid:
-    enabled: true
-    dual-entry-preference: ONLINE
-```
+## Floodgate provider is unavailable
 
-## Unknown backend in `server-groups.yml`
+Check that:
 
-Every server reference must resolve to a real configured Velocity backend.
+- Floodgate and Geyser are installed on Velocity;
+- `identity.floodgate.enabled` is `true`;
+- Floodgate's plugin ID is `floodgate` and it loaded before monban;
+- `require-provider: true` is not enabled on a proxy without Floodgate.
 
-**Fix:** compare the entry with the backend names in Velocity configuration, correct the spelling, and restart.
+If startup reports a required provider error, install or repair Floodgate. Once a provider has been discovered, a login-time provider failure denies the connection rather than downgrading it to a Java identity.
 
-## Backend grant fails validation
+If `require-provider` is `false` and the API was never discovered, monban continues with Java identity resolution. Set `require-provider: true` when Bedrock access is required.
 
-Persistent server-scoped grants and backend policy scopes are validated against the resolved topology.
+## Bedrock player does not match the access record
 
-**Fix:** verify that the group exists and that a `SERVER` scope uses the backend's exact canonical Velocity name. Do not rely on different case or non-canonical spelling in persistent state.
+Compare the exact Floodgate Java username, including its prefix and space replacement for unlinked accounts. `.BedrockName` and `BedrockName` are different keys. A name change requires a new record. A linked account can resolve to the linked Java name instead of the raw Bedrock name.
 
-## Whitelisted player denied by backend
+## Floodgate settings fail on Paper
 
-This is expected when the backend is `GRANT_REQUIRED`. A `NETWORK` grant passes Network Admission but does not replace a required `SERVER` or `SERVER_GROUP` grant.
+Remove `identity.floodgate` from the backend. Only the Velocity build accepts it. A backend behind Geyser uses Velocity's admission decision; synchronized permissions apply only to Java identities the backend can resolve.
 
-**Fix:** grant the required scoped access with `/monban access`.
+## Floodgate player has no permission on a backend
 
-## Restricted backend with whitelist disabled
+This is expected for Floodgate-scoped groups and direct permissions in 3.3.0. The backend does not create a `FLOODGATE` identity, so it cannot match those records. Use a Velocity-side permission check, or manage that backend feature with a Bedrock-aware permissions plugin.
 
-This is expected. The toggle disables only the global `NETWORK` requirement. Velocity Backend Admission remains active.
+## Backend never receives state
 
-**Fix:** either grant the required scope or change the backend policy to `OPEN` if that backend should be public.
+Verify:
+
+- `backend-permissions.enabled: true` on Velocity and the backend;
+- `server-name` exactly matches Velocity;
+- `sync.yml` is copied and identical;
+- the secret decodes to 16–128 bytes;
+- the backend uses Velocity forwarding;
+- the backend has a valid `sync.yml` and starts without a synchronization error.
+
+Do not copy `state-revision`. Do not expect a local whitelist fallback while synchronization is unavailable. monban does not log every accepted backend snapshot, so verify the result with an actual permission check after reconnecting.
+
+## Permission exists in lookup but not in the backend plugin
+
+Check the scope. A `SERVER_GROUP` node requires the backend's local `server-groups.yml` mapping to match Velocity. Then reconnect so Velocity sends a fresh snapshot and confirm the node string exactly matches the plugin's expected permission. There is no periodic refresh loop.
+
+## Command is denied
+
+Grant the specific command permission, for example `monban.command.whitelist` or `monban.command.group`. There is no single `monban.command.*` gate.
